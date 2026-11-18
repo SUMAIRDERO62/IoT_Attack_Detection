@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IoT Attack Detection · CIC-IoT-2023</title>
+<meta name="description" content="Machine learning demo that classifies IoT network flows into 8 attack categories.">
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1b2430; --muted: #5d6b7c; --line: #dde2e9;
+    --accent: #1f5fa8; --accent-soft: #e6eef8; --good: #1e8a4c; --bad: #c23b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f141a; --card: #171e27; --text: #e6ebf1; --muted: #9aa8b8; --line: #283240;
+      --accent: #6aa7e8; --accent-soft: #1d2b3d; --good: #4cc07f; --bad: #ef6b6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 60px; }
+  header { padding: 40px 0 8px; }
+  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 1.3rem; margin: 40px 0 12px; }
+  h3 { font-size: 1.05rem; margin: 22px 0 8px; }
+  p { margin: 0 0 12px; }
+  a { color: var(--accent); }
+  .sub { color: var(--muted); max-width: 720px; }
+  .links { margin-top: 10px; font-size: 0.95rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: transparent; color: var(--text); padding: 8px 14px;
+         border-radius: 8px; cursor: pointer; font: inherit; }
+  .tab[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  select, button.btn, input[type=file]::file-selector-button {
+    font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); color: var(--text); }
+  button.btn { cursor: pointer; }
+  button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.btn:disabled { opacity: 0.5; cursor: default; }
+  .muted { color: var(--muted); }
+  .small { font-size: 0.88rem; }
+  .status { min-height: 1.4em; margin: 8px 0; }
+  .error { color: var(--bad); }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 600; color: #101418; }
+  .result { margin-top: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; }
+  .result.ok { border-color: var(--good); }
+  .result.wrong { border-color: var(--bad); }
+  .bar-row { display: grid; grid-template-columns: 92px 1fr 56px; gap: 10px; align-items: center; margin: 5px 0; }
+  .track { background: var(--accent-soft); height: 14px; border-radius: 7px; overflow: hidden; }
+  .fill { height: 100%; background: var(--accent); }
+  .bar-row.best .fill { background: var(--good); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+  th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 600; }
+  .scroll { overflow-x: auto; }
+  details { margin-top: 12px; }
+  summary { cursor: pointer; color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  figure { margin: 0; }
+  figure img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  figcaption { color: var(--muted); font-size: 0.88rem; margin-top: 6px; }
+  ul { padding-left: 20px; margin: 0 0 12px; }
+  li { margin: 4px 0; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 0.88rem; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>IoT Attack Detection</h1>
+  <p class="sub">An XGBoost model that sorts IoT network flows into 8 categories (Benign, DDoS, DoS, Mirai, Recon,
+     Spoofing, BruteForce, Web). It was trained on a 5% sample of the CIC-IoT-2023 dataset. This is a research demo,
+     not a security product.</p>
+  <div class="links"><a id="repo-link" href="#">Source code and notebook on GitHub</a></div>
+</header>
+
+<h2>Try the model</h2>
+<div class="card">
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-demo" aria-selected="true">Demo flows</button>
+    <button class="tab" role="tab" id="tab-upload" aria-selected="false">Upload a CSV</button>
+  </div>
+  <div id="status" class="status muted" aria-live="polite">Loading the model information...</div>
+
+  <section id="panel-demo">
+    <p class="small muted">The demo flows are 800 real flows from the test set, which the model did not see during
+       training (up to 100 per category). Pick a category, draw a random flow and let the model classify it.</p>
+    <div class="row">
+      <label for="cat-select">Category</label>
+      <select id="cat-select"></select>
+      <button class="btn primary" id="btn-random">Random flow</button>
+      <button class="btn" id="btn-all">Classify all demo flows</button>
+    </div>
+    <div id="demo-result"></div>
+    <div id="demo-all"></div>
+  </section>
+
+  <section id="panel-upload" class="hidden">
+    <p class="small muted">Upload a CSV file with a header row. It needs the 42 feature columns of the model (same names
+       as in the CIC-IoT-2023 files, without <code>Srate</code>, <code>LLC</code>, <code>Telnet</code> and
+       <code>SMTP</code>). Other columns are ignored. A column called <code>label</code>,
+       <code>category</code> or <code>true_category</code> is only shown next to the prediction.
+       The file is sent to the API of this site; it is not stored.</p>
+    <div class="row">
+      <input type="file" id="file-input" accept=".csv,text/csv">
+      <button class="btn" id="btn-sample" disabled>Download a sample CSV</button>
+    </div>
+    <details class="small"><summary>Show the 42 required columns</summary><p id="feature-list" class="muted"></p></details>
+    <div id="upload-result"></div>
+  </section>
+</div>
+
+<h2>Results</h2>
+<p>Everything below was measured on a held-out test set of 392,756 flows. Accuracy is above 0.99 for every model and
+   hides the weak classes, so the main metric is macro-F1 (the average of the F1 scores of the classes).</p>
+<div class="card scroll">
+  <table>
+    <thead><tr><th>Model</th><th>2 classes</th><th>8 classes</th><th>8 classes, without IAT, Number, Weight</th>
+      <th>34 classes</th></tr></thead>
+    <tbody>
+      <tr><td>Random Forest</td><td>0.970</td><td>0.841</td><td>0.660</td><td>0.809</td></tr>
+      <tr><td>XGBoost</td><td>0.959</td><td>0.832</td><td>0.668</td><td>0.828</td></tr>
+      <tr><td>LightGBM</td><td>0.961</td><td>0.789</td><td>0.689</td><td>not run</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted" style="margin-top:10px">Macro-F1 on the test set. One random split and one seed, so differences of
+     about 0.01 are not reliable. The model behind this page is the 8-class XGBoost model.</p>
+</div>
+
+<h3>Figures</h3>
+<div class="grid2">
+  <figure><img src="figures/09_model_comparison_8class.png" alt="Model comparison" onerror="this.parentNode.classList.add('hidden')">
+    <figcaption>Macro-F1 of the three models, and quality against prediction time.</figcaption></figure>
+  <figure><img src="figures/10_recall_per_category.png" alt="Recall per category" onerror="this.parentNode.classList.add('hidden')">
+    <figcaption>Recall per attack category. Web and BruteForce are the weakest.</figcaption></figure>
+  <figure><img src="figures/12_recall_per_label_34class.png" alt="Recall per label" onerror="this.parentNode.classList.add('hidden')">
+    <figcaption>Recall for each of the 34 exact attack types. Rare labels are recognised worst.</figcaption></figure>
+  <figure><img src="figures/15_shap_global_importance.png" alt="Feature importance" onerror="this.parentNode.classList.add('hidden')">
+    <figcaption>What the XGBoost model relies on (SHAP). IAT, Number and Weight carry 43% of the importance.</figcaption></figure>
+</div>
+
+<h2>What to keep in mind</h2>
+<ul>
+  <li>The model relies strongly on three features (<code>IAT</code>, <code>Number</code>, <code>Weight</code>). Without them the
+      8-class macro-F1 falls from 0.83 to 0.67. I could not verify what <code>IAT</code> measures, so the real performance is
+      probably somewhere between the two numbers.</li>
+  <li>Rare attacks (Web attacks, BruteForce) are recognised much worse than floods.</li>
+  <li>The data comes from one lab. Results on other networks may be different.</li>
+  <li>The test split is random, and neighbouring flows of a capture are similar, so the scores are probably somewhat optimistic.</li>
+</ul>
+
+<footer>
+  <p>Dataset: Neto, E. C. P., Dadkhah, S., Ferreira, R., Zohourian, A., Lu, R., Ghorbani, A. A. (2023).
+     CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment. Sensors, 23(13), 5941.
+     <a href="https://doi.org/10.3390/s23135941">doi.org/10.3390/s23135941</a></p>
+  <p>Built by Sumair Ahmed, Department of Artificial Intelligence, University of Sindh.</p>
+</footer>
+</div>
+
+<script>
+const REPO_URL = "https://github.com/YOUR-USERNAME/iot-attack-detection";   // edit this one line
+const API = "/api/predict";
+const COLORS = { Benign: "#0173b2", DDoS: "#de8f05", DoS: "#029e73", Mirai: "#d55e00",
+                 Recon: "#cc78bc", Spoofing: "#ca9161", BruteForce: "#fbafe4", Web: "#949494" };
+
+const $ = (id) => document.getElementById(id);
+let META = null;   // answer of GET /api/predict: features, classes, max_rows
+let DEMO = null;   // demo_flows.json: features, classes, true, rows
+
+// ---------- small helpers ----------
+function el(tag, props, ...kids) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === "class") node.className = v;
+    else if (k === "style") node.style.cssText = v;
+    else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+    else node.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) node.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return node;
+}
+function badge(name) {
+  return el("span", { class: "badge", style: "background:" + (COLORS[name] || "#ccc") }, name);
+}
+function setStatus(text, isError) {
+  const s = $("status");
+  s.textContent = text;
+  s.className = "status " + (isError ? "error" : "muted");
+}
+function pct(x) { return (100 * x).toFixed(1) + "%"; }
+
+async function apiPredict(columns, rows) {
+  const res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" },
+                                 body: JSON.stringify({ columns, rows }) });
+  let data = {};
+  try { data = await res.json(); } catch (e) { /* not json */ }
+  if (!res.ok) throw new Error(data.error || "The API answered with status " + res.status);
+  return data;
+}
+
+// minimal CSV parser: quoted fields, commas, \n or \r\n line ends
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; } else inQuotes = false;
+      } else field += ch;
+    } else if (ch === '"') inQuotes = true;
+    else if (ch === ",") { row.push(field); field = ""; }
+    else if (ch === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+    else if (ch !== "\r") field += ch;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter((r) => r.length > 1 || (r.length === 1 && r[0].trim() !== ""));
+}
+function toNumber(s) {
+  if (s === undefined || String(s).trim() === "") return NaN;   // an empty cell must not become 0
+  return Number(s);
+}
+
+// ---------- probability bars ----------
+function probBars(classes, probs, best) {
+  const order = classes.map((c, i) => [c, probs[i]]).sort((a, b) => b[1] - a[1]);
+  return el("div", {}, order.map(([c, p]) =>
+    el("div", { class: "bar-row" + (c === best ? " best" : "") },
+      el("span", { class: "small" }, c),
+      el("div", { class: "track" }, el("div", { class: "fill", style: "width:" + (100 * p).toFixed(1) + "%" })),
+      el("span", { class: "small" }, pct(p)))));
+}
+
+// ---------- demo tab ----------
+async function classifyOne(i) {
+  const box = $("demo-result");
+  box.replaceChildren(el("p", { class: "muted" }, "Classifying..."));
+  try {
+    const out = await apiPredict(DEMO.features, [DEMO.rows[i]]);
+    const pred = out.predictions[0], truth = DEMO.true[i];
+    const right = pred === truth;
+    const rows = DEMO.features.map((f, j) => el("tr", {}, el("td", {}, f), el("td", {}, String(DEMO.rows[i][j]))));
+    box.replaceChildren(el("div", { class: "result " + (right ? "ok" : "wrong") },
+      el("p", {}, "True category: ", badge(truth), "  Model says: ", badge(pred), "  ",
+        el("strong", { style: "color:var(--" + (right ? "good" : "bad") + ")" }, right ? "correct" : "wrong")),
+      probBars(out.classes, out.probabilities[0], pred),
+      el("details", {}, el("summary", {}, "Show the 42 feature values of this flow"),
+        el("div", { class: "scroll" }, el("table", {}, el("tbody", {}, rows))))));
+  } catch (e) {
+    box.replaceChildren(el("p", { class: "error" }, e.message));
+  }
+}
+function randomFlow() {
+  const cat = $("cat-select").value;
+  const pool = [];
+  DEMO.true.forEach((t, i) => { if (cat === "all" || t === cat) pool.push(i); });
+  if (!pool.length) return;
+  classifyOne(pool[Math.floor(Math.random() * pool.length)]);
+}
+async function classifyAll() {
+  const box = $("demo-all");
+  box.replaceChildren(el("p", { class: "muted" }, "Classifying " + DEMO.rows.length + " flows..."));
+  try {
+    const out = await apiPredict(DEMO.features, DEMO.rows);
+    const classes = out.classes;
+    const counts = {};   // counts[true][predicted]
+    classes.forEach((a) => { counts[a] = {}; classes.forEach((b) => { counts[a][b] = 0; }); });
+    DEMO.true.forEach((t, i) => { counts[t][out.predictions[i]]++; });
+
+    const head = el("tr", {}, el("th", {}, "true \\ predicted"), classes.map((c) => el("th", {}, c)), el("th", {}, "recall"));
+    const body = classes.map((a) => {
+      const total = classes.reduce((s, b) => s + counts[a][b], 0) || 1;
+      return el("tr", {}, el("td", {}, a),
+        classes.map((b) => {
+          const share = counts[a][b] / total;
+          return el("td", { style: "background: rgba(31,95,168," + (share * 0.55).toFixed(2) + ")" }, String(counts[a][b]));
+        }),
+        el("td", {}, pct(counts[a][a] / total)));
+    });
+    const correct = DEMO.true.filter((t, i) => t === out.predictions[i]).length;
+    const recalls = classes.map((a) => counts[a][a] / (classes.reduce((s, b) => s + counts[a][b], 0) || 1));
+    const mean = recalls.reduce((s, r) => s + r, 0) / recalls.length;
+    box.replaceChildren(
+      el("h3", {}, "All demo flows"),
+      el("p", { class: "small muted" }, correct + " of " + DEMO.rows.length + " flows classified correctly. The demo set has up to 100 flows per category, " +
+        "so the average recall over the categories (" + pct(mean) + ") is the fairer number here. These are not the full test-set scores."),
+      el("div", { class: "scroll" }, el("table", {}, el("thead", {}, head), el("tbody", {}, body))));
+  } catch (e) {
+    box.replaceChildren(el("p", { class: "error" }, e.message));
+  }
+}
+
+// ---------- upload tab ----------
+function csvEscape(s) { s = String(s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function downloadText(name, text) {
+  const a = el("a", { href: URL.createObjectURL(new Blob([text], { type: "text/csv" })), download: name });
+  document.body.append(a); a.click(); a.remove();
+}
+async function handleFile(file) {
+  const box = $("upload-result");
+  box.replaceChildren(el("p", { class: "muted" }, "Reading " + file.name + "..."));
+  try {
+    const table = parseCSV(await file.text());
+    if (table.length < 2) throw new Error("The file needs a header row and at least one data row.");
+    const columns = table[0].map((s) => s.trim());
+    const missing = META.features.filter((f) => !columns.includes(f));
+    if (missing.length) {
+      throw new Error(missing.length + " required column(s) missing: " + missing.slice(0, 8).join(", ") + (missing.length > 8 ? " ..." : ""));
+    }
+    let body = table.slice(1);
+    let note = "";
+    if (body.length > META.max_rows) {
+      note = "Only the first " + META.max_rows + " of " + body.length + " rows were classified.";
+      body = body.slice(0, META.max_rows);
+    }
+    const idx = META.features.map((f) => columns.indexOf(f));
+    const labelCol = columns.findIndex((c) => ["true_category", "category", "label"].includes(c));
+    const rows = body.map((r) => idx.map((j) => toNumber(r[j])));
+    for (let i = 0; i < rows.length; i++) {
+      const j = rows[i].findIndex((v) => !Number.isFinite(v));
+      if (j >= 0) throw new Error("Row " + (i + 1) + ", column " + META.features[j] + ": the value is empty or not a number.");
+    }
+
+    const out = await apiPredict(META.features, rows);
+    const total = out.n_rows;
+    const summary = out.classes.map((c) => [c, out.summary[c]]).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+    const shown = Math.min(100, total);
+    const trs = [];
+    for (let i = 0; i < shown; i++) {
+      trs.push(el("tr", {}, el("td", {}, String(i + 1)), el("td", {}, out.predictions[i]), el("td", {}, pct(out.confidence[i])),
+        el("td", {}, labelCol >= 0 ? body[i][labelCol] : "")));
+    }
+    box.replaceChildren(
+      el("h3", {}, total + " flows classified"),
+      note ? el("p", { class: "small muted" }, note) : "",
+      el("div", {}, summary.map(([c, n]) => el("div", { class: "bar-row" },
+        el("span", { class: "small" }, c),
+        el("div", { class: "track" }, el("div", { class: "fill", style: "width:" + (100 * n / total).toFixed(1) + "%;background:" + (COLORS[c] || "var(--accent)") })),
+        el("span", { class: "small" }, String(n))))),
+      el("div", { class: "row", style: "margin-top:12px" },
+        el("button", { class: "btn", onclick: () => {
+          const lines = ["row,predicted,confidence"];
+          for (let i = 0; i < total; i++) lines.push([i + 1, out.predictions[i], out.confidence[i]].map(csvEscape).join(","));
+          downloadText("predictions.csv", lines.join("\n"));
+        } }, "Download all predictions (CSV)")),
+      el("div", { class: "scroll" }, el("table", {},
+        el("thead", {}, el("tr", {}, el("th", {}, "row"), el("th", {}, "predicted"), el("th", {}, "confidence"), el("th", {}, labelCol >= 0 ? columns[labelCol] : ""))),
+        el("tbody", {}, trs))),
+      total > shown ? el("p", { class: "small muted" }, "The table shows the first " + shown + " rows; the download has all of them.") : "");
+  } catch (e) {
+    box.replaceChildren(el("p", { class: "error" }, e.message));
+  }
+}
+function downloadSample() {
+  const n = 30, step = Math.floor(DEMO.rows.length / n);
+  const lines = [DEMO.features.concat(["true_category"]).map(csvEscape).join(",")];
+  for (let i = 0; i < n; i++) {
+    const k = i * step;
+    lines.push(DEMO.rows[k].concat([DEMO.true[k]]).map(csvEscape).join(","));
+  }
+  downloadText("sample_flows.csv", lines.join("\n"));
+}
+
+// ---------- tabs and start ----------
+function showTab(which) {
+  $("panel-demo").classList.toggle("hidden", which !== "demo");
+  $("panel-upload").classList.toggle("hidden", which !== "upload");
+  $("tab-demo").setAttribute("aria-selected", String(which === "demo"));
+  $("tab-upload").setAttribute("aria-selected", String(which === "upload"));
+}
+
+async function init() {
+  $("repo-link").href = REPO_URL;
+  $("tab-demo").addEventListener("click", () => showTab("demo"));
+  $("tab-upload").addEventListener("click", () => showTab("upload"));
+  $("btn-random").addEventListener("click", randomFlow);
+  $("btn-all").addEventListener("click", classifyAll);
+  $("btn-sample").addEventListener("click", downloadSample);
+  $("file-input").addEventListener("change", (ev) => { if (ev.target.files[0]) handleFile(ev.target.files[0]); });
+
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error("status " + res.status);
+    META = await res.json();
+    $("feature-list").textContent = META.features.join(", ");
+    setStatus("Model ready: XGBoost " + META.xgboost_version + ", " + META.features.length + " features, " + META.classes.length + " categories.");
+  } catch (e) {
+    setStatus("The prediction API is not reachable. The results below are still valid.", true);
+    $("btn-random").disabled = true; $("btn-all").disabled = true; $("file-input").disabled = true;
+    return;
+  }
+  try {
+    const res = await fetch("demo_flows.json");
+    if (!res.ok) throw new Error("status " + res.status);
+    DEMO = await res.json();
+    const select = $("cat-select");
+    select.append(el("option", { value: "all" }, "all categories"));
+    DEMO.classes.forEach((c) => select.append(el("option", { value: c }, c)));
+    $("btn-sample").disabled = false;
+  } catch (e) {
+    $("demo-result").replaceChildren(el("p", { class: "error" }, "demo_flows.json is missing, so the demo flows are not available."));
+    $("btn-random").disabled = true; $("btn-all").disabled = true;
+  }
+}
+init();
+</script>
+</body>
+</html>
