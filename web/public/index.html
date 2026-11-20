@@ -1,413 +1,199 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>IoT Attack Detection · CIC-IoT-2023</title>
-<meta name="description" content="Machine learning demo that classifies IoT network flows into 8 attack categories.">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080d18">
+<title>Sentinel | IoT Threat Intelligence</title>
+<meta name="description" content="Research-grade IoT network threat detection using an XGBoost model trained on CIC-IoT-2023.">
 <style>
-  :root {
-    --bg: #f6f7f9; --card: #ffffff; --text: #1b2430; --muted: #5d6b7c; --line: #dde2e9;
-    --accent: #1f5fa8; --accent-soft: #e6eef8; --good: #1e8a4c; --bad: #c23b3b;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0f141a; --card: #171e27; --text: #e6ebf1; --muted: #9aa8b8; --line: #283240;
-      --accent: #6aa7e8; --accent-soft: #1d2b3d; --good: #4cc07f; --bad: #ef6b6b;
-    }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 60px; }
-  header { padding: 40px 0 8px; }
-  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 8px; }
-  h2 { font-size: 1.3rem; margin: 40px 0 12px; }
-  h3 { font-size: 1.05rem; margin: 22px 0 8px; }
-  p { margin: 0 0 12px; }
-  a { color: var(--accent); }
-  .sub { color: var(--muted); max-width: 720px; }
-  .links { margin-top: 10px; font-size: 0.95rem; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
-  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-  .tab { border: 1px solid var(--line); background: transparent; color: var(--text); padding: 8px 14px;
-         border-radius: 8px; cursor: pointer; font: inherit; }
-  .tab[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
-  select, button.btn, input[type=file]::file-selector-button {
-    font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line);
-    background: var(--card); color: var(--text); }
-  button.btn { cursor: pointer; }
-  button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  button.btn:disabled { opacity: 0.5; cursor: default; }
-  .muted { color: var(--muted); }
-  .small { font-size: 0.88rem; }
-  .status { min-height: 1.4em; margin: 8px 0; }
-  .error { color: var(--bad); }
-  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 600; color: #101418; }
-  .result { margin-top: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; }
-  .result.ok { border-color: var(--good); }
-  .result.wrong { border-color: var(--bad); }
-  .bar-row { display: grid; grid-template-columns: 92px 1fr 56px; gap: 10px; align-items: center; margin: 5px 0; }
-  .track { background: var(--accent-soft); height: 14px; border-radius: 7px; overflow: hidden; }
-  .fill { height: 100%; background: var(--accent); }
-  .bar-row.best .fill { background: var(--good); }
-  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
-  th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: right; }
-  th:first-child, td:first-child { text-align: left; }
-  th { color: var(--muted); font-weight: 600; }
-  .scroll { overflow-x: auto; }
-  details { margin-top: 12px; }
-  summary { cursor: pointer; color: var(--accent); }
-  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
-  figure { margin: 0; }
-  figure img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
-  figcaption { color: var(--muted); font-size: 0.88rem; margin-top: 6px; }
-  ul { padding-left: 20px; margin: 0 0 12px; }
-  li { margin: 4px 0; }
-  footer { margin-top: 48px; color: var(--muted); font-size: 0.88rem; }
-  .hidden { display: none; }
+:root{color-scheme:dark;--bg:#080d18;--panel:#101827;--panel2:#0d1523;--line:#202d40;--text:#edf4ff;--muted:#8ea0b8;--cyan:#51d8e8;--blue:#638cff;--green:#54d6a0;--amber:#f4bd62;--red:#ff7185;--radius:18px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 70% -15%,#142b4a 0,transparent 42%),var(--bg);color:var(--text);font:14px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}.shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;border-right:1px solid var(--line);background:#09111eeb;padding:24px 16px;display:flex;flex-direction:column;z-index:5}.brand{display:flex;align-items:center;gap:12px;padding:4px 10px 28px}.brandmark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#54dce9,#5578ff);display:grid;place-items:center;color:#06111c;font-size:20px;font-weight:900;box-shadow:0 8px 28px #38c7dd30}.brand strong{display:block;font-size:14px;letter-spacing:.13em}.brand small{color:var(--muted);font-size:10px;letter-spacing:.12em}.navlabel{padding:12px 12px 8px;color:#60738d;font-size:10px;font-weight:800;letter-spacing:.16em}.nav a{display:flex;gap:12px;align-items:center;padding:11px 12px;margin:3px 0;border-radius:10px;color:#9aabc1;font-size:13px;transition:.2s}.nav a:hover,.nav a.active{background:#14243a;color:#eaf8ff}.nav a.active{box-shadow:inset 2px 0 var(--cyan)}.navicon{width:18px;text-align:center;color:var(--cyan)}.sidebottom{margin-top:auto;border:1px solid var(--line);background:#0d1928;border-radius:14px;padding:14px}.sidebottom b{font-size:12px}.sidebottom p{font-size:11px;color:var(--muted);margin:6px 0 0}.main{min-width:0;padding:0 34px 60px;max-width:1700px;width:100%;margin:auto}.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:16px}.crumb{font-size:12px;color:var(--muted)}.crumb b{color:#e5efff;font-weight:600}.topright{display:flex;align-items:center;gap:12px}.statuspill{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#0e1a29;border-radius:99px;padding:7px 12px;color:var(--muted);font-size:11px}.dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px currentColor}.dot.online{background:var(--green)}.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#203957;color:var(--cyan);font-weight:800;font-size:11px}.hero{padding:36px 0 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px}.eyebrow{color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase}.hero h1{font-size:clamp(27px,3vw,42px);letter-spacing:-.04em;line-height:1.12;margin:10px 0 10px}.hero p{max-width:690px;color:var(--muted);margin:0}.heroactions{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#111e30;color:#dceaff;font-size:12px;font-weight:700;transition:.2s}.btn:hover{border-color:#42627d;transform:translateY(-1px)}.btn.primary{background:linear-gradient(110deg,#46cbdc,#638cff);border:0;color:#06121f}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:14px 0 24px}.metric,.panel{border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(145deg,#121d2d,#0d1624);box-shadow:0 14px 40px #00000018}.metric{padding:17px 18px;position:relative;overflow:hidden}.metric:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-38px;top:-42px;background:#55d9e812}.metric .label{color:var(--muted);font-size:11px}.metric .value{font-size:27px;font-weight:750;letter-spacing:-.04em;margin:8px 0 2px}.metric .note{font-size:10px;color:#71849d}.metric .accent{color:var(--cyan)}.section{margin-top:30px;scroll-margin-top:20px}.sectionhead{display:flex;justify-content:space-between;align-items:flex-end;gap:15px;margin-bottom:13px}.sectionhead h2{font-size:18px;letter-spacing:-.02em;margin:0}.sectionhead p{margin:4px 0 0;color:var(--muted);font-size:11px}.tag{font-size:10px;color:#91a8c5;border:1px solid var(--line);padding:5px 9px;border-radius:99px}.overviewgrid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}.panel{padding:19px;min-width:0}.paneltitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.paneltitle h3{margin:0;font-size:13px}.paneltitle span{color:var(--muted);font-size:10px}.chart{width:100%;height:220px;display:block}.legend{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:10px}.legend i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px}.classlist{display:grid;gap:12px}.classrow{display:grid;grid-template-columns:78px 1fr 32px;gap:9px;align-items:center;font-size:11px}.track{height:7px;background:#1a2a3e;border-radius:99px;overflow:hidden}.fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#4dcddd,#648aff)}.classrow b{text-align:right;color:#cbd9eb;font-size:10px}.labgrid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:14px}.scenario-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:13px 0}.scenario{border:1px solid var(--line);background:#0c1726;color:#b6c7dc;border-radius:10px;padding:10px 7px;font-size:11px}.scenario:hover,.scenario.selected{border-color:#48cddd;color:#e9fcff;background:#10283a}.scenario .sicon{font-size:16px;display:block;margin-bottom:4px}.labcontrols{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:13px}.resultbox{min-height:290px;border:1px dashed #2a3b51;border-radius:14px;padding:18px;background:#0b1421}.empty{text-align:center;padding:62px 12px;color:var(--muted)}.empty .big{font-size:28px;margin-bottom:9px}.resulttop{display:flex;justify-content:space-between;align-items:center;gap:10px}.resultclass{font-size:25px;font-weight:800;letter-spacing:-.03em;margin:10px 0 2px}.severity{font-size:10px;padding:5px 9px;border-radius:99px;background:#18372f;color:var(--green)}.severity.attack{background:#3a202b;color:#ff9aaa}.confidence{font-size:11px;color:var(--muted)}.probrow{display:grid;grid-template-columns:75px 1fr 42px;gap:8px;align-items:center;margin:10px 0;font-size:10px;color:#a9bad0}.probrow .track{height:6px}.probrow b{text-align:right}.featuretable{max-height:220px;overflow:auto;margin-top:14px;border-top:1px solid var(--line)}table{width:100%;border-collapse:collapse;font-size:10px}td,th{padding:7px 6px;border-bottom:1px solid #1b293a;text-align:left}th{color:#8194ad;font-weight:600;position:sticky;top:0;background:#101b2b}td:last-child,th:last-child{text-align:right;font-variant-numeric:tabular-nums}.datasetgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.dropzone{border:1px dashed #34516c;border-radius:13px;padding:20px;text-align:center;background:#0b1726}.dropzone input{max-width:100%;font-size:11px;color:var(--muted)}.dropzone p{font-size:11px;color:var(--muted);margin:7px 0}.smallnote{font-size:10px;color:var(--muted);line-height:1.6}.tablewrap{overflow:auto;max-height:340px;border:1px solid var(--line);border-radius:12px}.tablewrap table{min-width:560px}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.filters input,.filters select{background:#0b1726;border:1px solid var(--line);border-radius:9px;padding:9px 10px;color:#dceaff;font-size:11px;min-width:130px}.pagination{display:flex;align-items:center;justify-content:space-between;margin-top:10px;color:var(--muted);font-size:10px}.analyticsgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.resulttable td:not(:first-child),.resulttable th:not(:first-child){text-align:right}.researchgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.researchcard{padding:16px;border:1px solid var(--line);border-radius:14px;background:#0e1928}.researchcard .num{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:.1em}.researchcard h3{font-size:13px;margin:8px 0 5px}.researchcard p{font-size:11px;color:var(--muted);margin:0}.method{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.step{border:1px solid var(--line);background:#0e1928;border-radius:12px;padding:12px 10px}.step b{display:block;color:var(--cyan);font-size:10px}.step span{font-size:11px;color:#b9c9dc}.limitations{display:grid;grid-template-columns:1fr 1fr;gap:10px}.lim{border:1px solid #3b3040;background:#1a1723;border-radius:12px;padding:13px}.lim b{font-size:11px;color:#f0c4a4}.lim p{font-size:10px;color:#b5a9b5;margin:5px 0 0}.footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:#6f8199;font-size:10px;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}.toast{position:fixed;bottom:22px;right:22px;padding:12px 16px;background:#142b3d;border:1px solid #2f7180;border-radius:12px;color:#dffbff;font-size:12px;box-shadow:0 12px 40px #0008;display:none;z-index:20}.mobilemenu{display:none}
+@media(max-width:1100px){.shell{grid-template-columns:205px 1fr}.main{padding:0 22px 45px}.metrics{grid-template-columns:repeat(2,1fr)}.method{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.shell{display:block}.sidebar{position:fixed;left:-260px;width:245px;transition:left .25s;box-shadow:15px 0 50px #0008}.sidebar.open{left:0}.mobilemenu{display:inline-flex}.main{padding:0 15px 40px}.topbar{height:62px}.hero{display:block;padding:27px 0 18px}.heroactions{margin-top:15px}.overviewgrid,.labgrid,.datasetgrid,.analyticsgrid{grid-template-columns:1fr}.metrics{gap:8px}.metric{padding:13px}.metric .value{font-size:23px}.scenario-grid{grid-template-columns:repeat(4,1fr)}.researchgrid{grid-template-columns:1fr}.method{grid-template-columns:repeat(2,1fr)}.limitations{grid-template-columns:1fr}.sectionhead{align-items:flex-start}.topright .statuspill{display:none}}
+@media(max-width:390px){.scenario-grid{grid-template-columns:repeat(2,1fr)}.metrics{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-<header>
-  <h1>IoT Attack Detection</h1>
-  <p class="sub">An XGBoost model that sorts IoT network flows into 8 categories (Benign, DDoS, DoS, Mirai, Recon,
-     Spoofing, BruteForce, Web). It was trained on a 5% sample of the CIC-IoT-2023 dataset. This is a research demo,
-     not a security product.</p>
-  <div class="links"><a id="repo-link" href="#">Source code and notebook on GitHub</a></div>
-</header>
-
-<h2>Try the model</h2>
-<div class="card">
-  <div class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tab-demo" aria-selected="true">Demo flows</button>
-    <button class="tab" role="tab" id="tab-upload" aria-selected="false">Upload a CSV</button>
-  </div>
-  <div id="status" class="status muted" aria-live="polite">Loading the model information...</div>
-
-  <section id="panel-demo">
-    <p class="small muted">The demo flows are 800 real flows from the test set, which the model did not see during
-       training (up to 100 per category). Pick a category, draw a random flow and let the model classify it.</p>
-    <div class="row">
-      <label for="cat-select">Category</label>
-      <select id="cat-select"></select>
-      <button class="btn primary" id="btn-random">Random flow</button>
-      <button class="btn" id="btn-all">Classify all demo flows</button>
-    </div>
-    <div id="demo-result"></div>
-    <div id="demo-all"></div>
+<div class="shell">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="brandmark">⌁</div><div><strong>SENTINEL</strong><small>IoT THREAT INTELLIGENCE</small></div></div>
+  <div class="navlabel">WORKSPACE</div>
+  <nav class="nav">
+    <a class="active" href="#overview"><span class="navicon">◈</span>Overview</a>
+    <a href="#detection"><span class="navicon">⌁</span>Detection lab</a>
+    <a href="#dataset"><span class="navicon">▦</span>Dataset explorer</a>
+    <a href="#analytics"><span class="navicon">▥</span>Research analytics</a>
+  </nav>
+  <div class="navlabel">RESEARCH</div>
+  <nav class="nav">
+    <a href="#methodology"><span class="navicon">⌘</span>Methodology</a>
+    <a href="#limitations"><span class="navicon">△</span>Limitations</a>
+    <a href="#references"><span class="navicon">↗</span>References</a>
+  </nav>
+  <div class="sidebottom"><b>Research prototype</b><p>Academic demonstration only. Not a production network security system.</p></div>
+</aside>
+<main class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="btn mobilemenu" id="menuBtn">☰</button><div class="crumb">Workspace&nbsp; / &nbsp;<b>Threat overview</b></div></div>
+    <div class="topright"><div class="statuspill"><span class="dot" id="apiDot"></span><span id="apiStatus">Connecting to inference API</span></div><div class="avatar">SA</div></div>
+  </header>
+  <section class="hero" id="overview">
+    <div><div class="eyebrow">CIC-IoT-2023 · MACHINE LEARNING RESEARCH</div><h1>Understand the signal.<br><span style="color:var(--cyan)">Detect the threat.</span></h1><p>An interactive research environment for classifying IoT network flows with an exported XGBoost model. Explore held-out traffic, inspect model outputs and review the evidence behind the experiment.</p></div>
+    <div class="heroactions"><a class="btn" href="#analytics">Explore research ↗</a><a class="btn primary" href="#detection">Launch detection lab →</a></div>
   </section>
-
-  <section id="panel-upload" class="hidden">
-    <p class="small muted">Upload a CSV file with a header row. It needs the 42 feature columns of the model (same names
-       as in the CIC-IoT-2023 files, without <code>Srate</code>, <code>LLC</code>, <code>Telnet</code> and
-       <code>SMTP</code>). Other columns are ignored. A column called <code>label</code>,
-       <code>category</code> or <code>true_category</code> is only shown next to the prediction.
-       The file is sent to the API of this site; it is not stored.</p>
-    <div class="row">
-      <input type="file" id="file-input" accept=".csv,text/csv">
-      <button class="btn" id="btn-sample" disabled>Download a sample CSV</button>
-    </div>
-    <details class="small"><summary>Show the 42 required columns</summary><p id="feature-list" class="muted"></p></details>
-    <div id="upload-result"></div>
+  <section class="metrics">
+    <article class="metric"><div class="label">Held-out test accuracy</div><div class="value accent">99.46%</div><div class="note">392,756 test flows · reported experiment</div></article>
+    <article class="metric"><div class="label">8-class macro F1</div><div class="value">0.832</div><div class="note">XGBoost · primary comparison metric</div></article>
+    <article class="metric"><div class="label">Model input features</div><div class="value">42</div><div class="note">Ordered from exported metadata</div></article>
+    <article class="metric"><div class="label">Attack categories</div><div class="value">08</div><div class="note">One benign + seven attack families</div></article>
   </section>
+  <section class="section">
+    <div class="sectionhead"><div><h2>Traffic intelligence</h2><p>Composition of the curated held-out demonstration sample</p></div><span class="tag">800 real test-set flows</span></div>
+    <div class="overviewgrid">
+      <div class="panel"><div class="paneltitle"><h3>Demo sample composition</h3><span>Ground-truth labels</span></div><canvas id="distChart" class="chart" height="220"></canvas><div class="legend" id="chartLegend"></div></div>
+      <div class="panel"><div class="paneltitle"><h3>Category distribution</h3><span id="sampleCount">Loading sample…</span></div><div class="classlist" id="classList"><p class="smallnote">Reading the real demo-flow file…</p></div></div>
+    </div>
+  </section>
+  <section class="section" id="detection">
+    <div class="sectionhead"><div><h2>Live detection lab</h2><p>Run inference against the locally loaded XGBoost model — not a simulated result.</p></div><span class="tag">POST /api/predict</span></div>
+    <div class="labgrid">
+      <div class="panel">
+        <div class="paneltitle"><h3>Choose a traffic scenario</h3><span>Real held-out examples</span></div>
+        <div class="scenario-grid" id="scenarioGrid">
+          <button class="scenario selected" data-class="Benign"><span class="sicon">◉</span>Benign</button>
+          <button class="scenario" data-class="DDoS"><span class="sicon">⇣</span>DDoS</button>
+          <button class="scenario" data-class="DoS"><span class="sicon">▤</span>DoS</button>
+          <button class="scenario" data-class="Mirai"><span class="sicon">⌘</span>Mirai</button>
+          <button class="scenario" data-class="BruteForce"><span class="sicon">⌗</span>BruteForce</button>
+          <button class="scenario" data-class="Recon"><span class="sicon">⌕</span>Recon</button>
+          <button class="scenario" data-class="Spoofing"><span class="sicon">⟡</span>Spoofing</button>
+          <button class="scenario" data-class="Web"><span class="sicon">◎</span>Web</button>
+        </div>
+        <div class="labcontrols"><button class="btn primary" id="runScenario" disabled>Run model prediction →</button><button class="btn" id="randomScenario" disabled>Random example</button><span class="smallnote" id="scenarioInfo">Loading demo examples…</span></div>
+        <div style="margin-top:16px" class="smallnote">Each scenario selects an actual row from the 800-flow held-out sample. The model receives all 42 features in the metadata-defined order.</div>
+      </div>
+      <div class="panel"><div class="paneltitle"><h3>Inference output</h3><span id="inferenceTime">Awaiting input</span></div><div class="resultbox" id="resultBox"><div class="empty"><div class="big">⌁</div><b>Detection output will appear here</b><p>Choose a scenario and run inference.</p></div></div></div>
+    </div>
+  </section>
+  <section class="section" id="dataset">
+    <div class="sectionhead"><div><h2>Dataset explorer</h2><p>Search and inspect the real held-out sample, or submit a compatible CSV for batch inference.</p></div><span class="tag">42 features · 800 rows</span></div>
+    <div class="datasetgrid">
+      <div class="panel">
+        <div class="paneltitle"><h3>Sample flow browser</h3><span id="rowsLabel">0 records</span></div>
+        <div class="filters"><input id="searchRows" placeholder="Search category or row…" aria-label="Search rows"><select id="filterClass"><option value="all">All categories</option></select></div>
+        <div class="tablewrap"><table><thead><tr><th>Row</th><th>Ground truth</th><th>Duration</th><th>Protocol</th></tr></thead><tbody id="sampleRows"><tr><td colspan="4">Loading sample rows…</td></tr></tbody></table></div>
+        <div class="pagination"><span id="pageInfo">Page 1</span><div><button class="btn" id="prevPage">←</button> <button class="btn" id="nextPage">→</button></div></div>
+        <p class="smallnote">Select a row to load it into the detection lab. Feature values are available in the inference detail panel.</p>
+      </div>
+      <div class="panel">
+        <div class="paneltitle"><h3>Batch CSV inference</h3><span>Up to 3,000 rows / request</span></div>
+        <div class="dropzone"><div style="font-size:25px;color:var(--cyan)">⇧</div><b>Upload network-flow CSV</b><p>CSV must contain the exact 42 model feature columns.</p><input id="csvFile" type="file" accept=".csv,text/csv"></div>
+        <div class="labcontrols"><button class="btn primary" id="runCsv" disabled>Validate & classify CSV</button><button class="btn" id="downloadSample" disabled>Download sample CSV</button></div>
+        <div id="csvStatus" class="smallnote" style="margin-top:12px">Files are processed by this research demo API and are not saved by the interface.</div>
+        <div id="csvSummary"></div>
+      </div>
+    </div>
+  </section>
+  <section class="section" id="analytics">
+    <div class="sectionhead"><div><h2>Research analytics</h2><p>Published experiment metrics — kept separate from the 800-row interactive demo.</p></div><span class="tag">Held-out evaluation</span></div>
+    <div class="analyticsgrid">
+      <div class="panel"><div class="paneltitle"><h3>Eight-class macro-F1 comparison</h3><span>Higher is better</span></div><canvas id="modelChart" class="chart" height="220"></canvas><div class="legend"><span><i style="background:#51d8e8"></i>Macro-F1</span></div></div>
+      <div class="panel"><div class="paneltitle"><h3>Experiment scorecard</h3><span>Macro-F1</span></div><div class="tablewrap"><table class="resulttable"><thead><tr><th>Model</th><th>2-class</th><th>8-class</th><th>8-class* </th><th>34-class</th></tr></thead><tbody><tr><td>Random Forest</td><td>0.970</td><td>0.841</td><td>0.660</td><td>0.809</td></tr><tr><td><b>XGBoost</b></td><td>0.959</td><td><b>0.832</b></td><td>0.668</td><td>0.828</td></tr><tr><td>LightGBM</td><td>0.961</td><td>0.789</td><td>0.689</td><td>Not run</td></tr></tbody></table></div><p class="smallnote" style="margin-top:10px">* Without IAT, Number and Weight. One random split and one seed; differences around 0.01 are not conclusive.</p></div>
+    </div>
+    <div class="researchgrid" style="margin-top:14px">
+      <article class="researchcard"><div class="num">01 / EVALUATION</div><h3>Accuracy is not the whole story</h3><p>Accuracy exceeded 0.99, while macro-F1 exposed weaker performance on less frequent attack families.</p></article>
+      <article class="researchcard"><div class="num">02 / FEATURE DEPENDENCE</div><h3>Feature ablation matters</h3><p>Removing IAT, Number and Weight reduced XGBoost 8-class macro-F1 from 0.832 to 0.668.</p></article>
+      <article class="researchcard"><div class="num">03 / GENERALIZATION</div><h3>External validation is needed</h3><p>Data comes from one lab environment; independent network captures are needed to test transferability.</p></article>
+    </div>
+  </section>
+  <section class="section" id="methodology">
+    <div class="sectionhead"><div><h2>Research methodology</h2><p>From benchmark data to browser-accessible inference.</p></div><span class="tag">Experimental pipeline</span></div>
+    <div class="panel"><div class="method"><div class="step"><b>01 · DATA</b><span>CIC-IoT-2023</span></div><div class="step"><b>02 · SAMPLE</b><span>5% training sample</span></div><div class="step"><b>03 · FEATURES</b><span>42 model inputs</span></div><div class="step"><b>04 · TRAIN</b><span>XGBoost classifier</span></div><div class="step"><b>05 · EVALUATE</b><span>Held-out test set</span></div><div class="step"><b>06 · EXPORT</b><span>UBJ model + API</span></div></div></div>
+  </section>
+  <section class="section" id="limitations">
+    <div class="sectionhead"><div><h2>Limitations & future work</h2><p>Interpret results in the context of the experiment's known constraints.</p></div><span class="tag">Research transparency</span></div>
+    <div class="limitations">
+      <div class="lim"><b>Class imbalance and rare attacks</b><p>Web and BruteForce are recognized less reliably than high-volume flood categories.</p></div>
+      <div class="lim"><b>Feature dependence</b><p>Performance falls when IAT, Number and Weight are excluded; their operational availability should be validated.</p></div>
+      <div class="lim"><b>Dataset representativeness</b><p>The benchmark comes from one lab. Results may differ on other devices, topologies and traffic distributions.</p></div>
+      <div class="lim"><b>Split and generalization</b><p>A random split may place similar neighboring flows across train and test sets, making results optimistic.</p></div>
+    </div>
+    <div class="researchgrid" style="margin-top:12px">
+      <article class="researchcard"><div class="num">NEXT / 01</div><h3>External validation</h3><p>Evaluate on independent captures and time-based splits.</p></article>
+      <article class="researchcard"><div class="num">NEXT / 02</div><h3>Explainability & robustness</h3><p>Publish SHAP analysis, adversarial tests and feature stability checks.</p></article>
+      <article class="researchcard"><div class="num">NEXT / 03</div><h3>Streaming & drift</h3><p>Explore online inference, alert review and distribution-shift monitoring.</p></article>
+    </div>
+  </section>
+  <section class="section" id="references">
+    <div class="sectionhead"><div><h2>Dataset reference</h2><p>Primary benchmark citation and project attribution.</p></div><span class="tag">Citation</span></div>
+    <div class="panel"><p style="font-size:12px;margin:0 0 8px">Neto, E. C. P., Dadkhah, S., Ferreira, R., Zohourian, A., Lu, R., & Ghorbani, A. A. (2023). <i>CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment.</i> Sensors, 23(13), 5941.</p><a style="color:var(--cyan);font-size:11px" href="https://doi.org/10.3390/s23135941" target="_blank" rel="noreferrer">https://doi.org/10.3390/s23135941 ↗</a><p class="smallnote" style="margin-top:12px">Built by Sumair Ahmed · Department of Artificial Intelligence, University of Sindh.</p></div>
+  </section>
+  <footer class="footer"><span>SENTINEL · IoT CYBER THREAT INTELLIGENCE & RESEARCH</span><span>Academic prototype · Not a production security control</span></footer>
+</main>
 </div>
-
-<h2>Results</h2>
-<p>Everything below was measured on a held-out test set of 392,756 flows. Accuracy is above 0.99 for every model and
-   hides the weak classes, so the main metric is macro-F1 (the average of the F1 scores of the classes).</p>
-<div class="card scroll">
-  <table>
-    <thead><tr><th>Model</th><th>2 classes</th><th>8 classes</th><th>8 classes, without IAT, Number, Weight</th>
-      <th>34 classes</th></tr></thead>
-    <tbody>
-      <tr><td>Random Forest</td><td>0.970</td><td>0.841</td><td>0.660</td><td>0.809</td></tr>
-      <tr><td>XGBoost</td><td>0.959</td><td>0.832</td><td>0.668</td><td>0.828</td></tr>
-      <tr><td>LightGBM</td><td>0.961</td><td>0.789</td><td>0.689</td><td>not run</td></tr>
-    </tbody>
-  </table>
-  <p class="small muted" style="margin-top:10px">Macro-F1 on the test set. One random split and one seed, so differences of
-     about 0.01 are not reliable. The model behind this page is the 8-class XGBoost model.</p>
-</div>
-
-<h3>Figures</h3>
-<div class="grid2">
-  <figure><img src="figures/09_model_comparison_8class.png" alt="Model comparison" onerror="this.parentNode.classList.add('hidden')">
-    <figcaption>Macro-F1 of the three models, and quality against prediction time.</figcaption></figure>
-  <figure><img src="figures/10_recall_per_category.png" alt="Recall per category" onerror="this.parentNode.classList.add('hidden')">
-    <figcaption>Recall per attack category. Web and BruteForce are the weakest.</figcaption></figure>
-  <figure><img src="figures/12_recall_per_label_34class.png" alt="Recall per label" onerror="this.parentNode.classList.add('hidden')">
-    <figcaption>Recall for each of the 34 exact attack types. Rare labels are recognised worst.</figcaption></figure>
-  <figure><img src="figures/15_shap_global_importance.png" alt="Feature importance" onerror="this.parentNode.classList.add('hidden')">
-    <figcaption>What the XGBoost model relies on (SHAP). IAT, Number and Weight carry 43% of the importance.</figcaption></figure>
-</div>
-
-<h2>What to keep in mind</h2>
-<ul>
-  <li>The model relies strongly on three features (<code>IAT</code>, <code>Number</code>, <code>Weight</code>). Without them the
-      8-class macro-F1 falls from 0.83 to 0.67. I could not verify what <code>IAT</code> measures, so the real performance is
-      probably somewhere between the two numbers.</li>
-  <li>Rare attacks (Web attacks, BruteForce) are recognised much worse than floods.</li>
-  <li>The data comes from one lab. Results on other networks may be different.</li>
-  <li>The test split is random, and neighbouring flows of a capture are similar, so the scores are probably somewhat optimistic.</li>
-</ul>
-
-<footer>
-  <p>Dataset: Neto, E. C. P., Dadkhah, S., Ferreira, R., Zohourian, A., Lu, R., Ghorbani, A. A. (2023).
-     CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment. Sensors, 23(13), 5941.
-     <a href="https://doi.org/10.3390/s23135941">doi.org/10.3390/s23135941</a></p>
-  <p>Built by Sumair Ahmed, Department of Artificial Intelligence, University of Sindh.</p>
-</footer>
-</div>
-
+<div class="toast" id="toast"></div>
 <script>
-const REPO_URL = "https://github.com/YOUR-USERNAME/iot-attack-detection";   // edit this one line
-const API = "/api/predict";
-const COLORS = { Benign: "#0173b2", DDoS: "#de8f05", DoS: "#029e73", Mirai: "#d55e00",
-                 Recon: "#cc78bc", Spoofing: "#ca9161", BruteForce: "#fbafe4", Web: "#949494" };
-
-const $ = (id) => document.getElementById(id);
-let META = null;   // answer of GET /api/predict: features, classes, max_rows
-let DEMO = null;   // demo_flows.json: features, classes, true, rows
-
-// ---------- small helpers ----------
-function el(tag, props, ...kids) {
-  const node = document.createElement(tag);
-  for (const [k, v] of Object.entries(props || {})) {
-    if (k === "class") node.className = v;
-    else if (k === "style") node.style.cssText = v;
-    else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
-    else node.setAttribute(k, v);
-  }
-  for (const kid of kids.flat()) node.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
-  return node;
+const API="/api/predict",DEMO_URL="/demo_flows.json";
+const COLORS=["#51d8e8","#f4bd62","#638cff","#ff7185","#a88cff","#54d6a0","#e89bcb","#8ea0b8"];
+const $=id=>document.getElementById(id);
+let META=null,DEMO=null,selectedClass="Benign",selectedIndex=null,page=1,pageSize=8,filtered=[];
+function toast(msg){const t=$("toast");t.textContent=msg;t.style.display="block";setTimeout(()=>t.style.display="none",2600)}
+function setApi(ok,msg){$("apiDot").classList.toggle("online",ok);$("apiStatus").textContent=msg}
+async function init(){
+  try{const r=await fetch(API);if(!r.ok)throw Error("API returned "+r.status);META=await r.json();setApi(true,"Inference API online");}
+  catch(e){setApi(false,"Inference API unavailable");$("scenarioInfo").textContent="Start local_server.py to enable predictions.";}
+  try{const r=await fetch(DEMO_URL);if(!r.ok)throw Error("Demo data unavailable");DEMO=await r.json();if(!Array.isArray(DEMO.rows)||!Array.isArray(DEMO.true))throw Error("Unexpected demo format");$("sampleCount").textContent=DEMO.rows.length+" held-out flows";$("scenarioInfo").textContent=DEMO.rows.length+" real sample flows loaded";$("runScenario").disabled=!META;$("randomScenario").disabled=!DEMO;$("downloadSample").disabled=!DEMO;buildDistribution();buildClassList();buildFilters();renderRows();drawModelChart();if(!META)toast("Demo data loaded; start API for inference.");}
+  catch(e){$("classList").innerHTML='<p class="smallnote">Could not load demo_flows.json: '+e.message+'</p>';$("scenarioInfo").textContent=e.message;}
+  $("filterClass").addEventListener("change",()=>{page=1;renderRows()});$("searchRows").addEventListener("input",()=>{page=1;renderRows()});
 }
-function badge(name) {
-  return el("span", { class: "badge", style: "background:" + (COLORS[name] || "#ccc") }, name);
+function buildDistribution(){
+ const counts=Object.fromEntries(DEMO.classes.map(c=>[c,0]));DEMO.true.forEach(c=>counts[c]=(counts[c]||0)+1);
+ const total=DEMO.true.length;$("chartLegend").innerHTML=DEMO.classes.map((c,i)=>`<span><i style="background:${COLORS[i]}"></i>${c}</span>`).join("");
+ $("distChart").dataset.values=JSON.stringify(DEMO.classes.map(c=>counts[c]||0));drawDistribution();
 }
-function setStatus(text, isError) {
-  const s = $("status");
-  s.textContent = text;
-  s.className = "status " + (isError ? "error" : "muted");
+function drawDistribution(){
+ const cv=$("distChart"),ctx=cv.getContext("2d"),dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=220;cv.width=w*dpr;cv.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);
+ const vals=JSON.parse(cv.dataset.values||"[]"),sum=vals.reduce((a,b)=>a+b,0),cx=w/2,cy=104,r=76,inner=49;let a=-Math.PI/2;
+ vals.forEach((v,i)=>{const b=a+Math.PI*2*(v/sum);ctx.beginPath();ctx.arc(cx,cy,r,a,b);ctx.arc(cx,cy,inner,b,a,true);ctx.closePath();ctx.fillStyle=COLORS[i];ctx.fill();a=b});
+ ctx.textAlign="center";ctx.fillStyle="#edf4ff";ctx.font="700 24px system-ui";ctx.fillText(sum,cx,cy+3);ctx.fillStyle="#8ea0b8";ctx.font="10px system-ui";ctx.fillText("TOTAL FLOWS",cx,cy+19);
 }
-function pct(x) { return (100 * x).toFixed(1) + "%"; }
-
-async function apiPredict(columns, rows) {
-  const res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" },
-                                 body: JSON.stringify({ columns, rows }) });
-  let data = {};
-  try { data = await res.json(); } catch (e) { /* not json */ }
-  if (!res.ok) throw new Error(data.error || "The API answered with status " + res.status);
-  return data;
+function buildClassList(){const counts=Object.fromEntries(DEMO.classes.map(c=>[c,0]));DEMO.true.forEach(c=>counts[c]=(counts[c]||0)+1);const max=Math.max(...Object.values(counts));$("classList").innerHTML=DEMO.classes.map((c,i)=>`<div class="classrow"><span>${c}</span><div class="track"><div class="fill" style="width:${100*counts[c]/max}%;background:${COLORS[i]}"></div></div><b>${counts[c]}</b></div>`).join("");}
+function buildFilters(){DEMO.classes.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;$("filterClass").append(o)})}
+function renderRows(){
+ const q=$("searchRows").value.toLowerCase(),cat=$("filterClass").value;
+ filtered=DEMO.true.map((c,i)=>({c,i})).filter(x=>(cat==="all"||x.c===cat)&&(!q||(x.c+" "+x.i).toLowerCase().includes(q)));
+ const pages=Math.max(1,Math.ceil(filtered.length/pageSize));page=Math.min(page,pages);const slice=filtered.slice((page-1)*pageSize,page*pageSize);
+ $("sampleRows").innerHTML=slice.map(({c,i})=>`<tr data-index="${i}" style="cursor:pointer"><td>#${i+1}</td><td style="color:${COLORS[DEMO.classes.indexOf(c)]}">${c}</td><td>${Number(DEMO.rows[i][0]).toPrecision(4)}</td><td>${Number(DEMO.rows[i][2]).toPrecision(4)}</td></tr>`).join("")||'<tr><td colspan="4">No matching records</td></tr>';
+ $("sampleRows").querySelectorAll("tr[data-index]").forEach(tr=>tr.addEventListener("click",()=>{selectedIndex=Number(tr.dataset.index);selectedClass=DEMO.true[selectedIndex];document.querySelectorAll(".scenario").forEach(b=>b.classList.toggle("selected",b.dataset.class===selectedClass));runPrediction(selectedIndex);document.querySelector("#detection").scrollIntoView({behavior:"smooth"})}));
+ $("rowsLabel").textContent=filtered.length+" records";$("pageInfo").textContent=`Page ${page} / ${pages}`;$("prevPage").disabled=page<=1;$("nextPage").disabled=page>=pages;
 }
-
-// minimal CSV parser: quoted fields, commas, \n or \r\n line ends
-function parseCSV(text) {
-  const rows = [];
-  let row = [], field = "", inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++; } else inQuotes = false;
-      } else field += ch;
-    } else if (ch === '"') inQuotes = true;
-    else if (ch === ",") { row.push(field); field = ""; }
-    else if (ch === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
-    else if (ch !== "\r") field += ch;
-  }
-  if (field.length || row.length) { row.push(field); rows.push(row); }
-  return rows.filter((r) => r.length > 1 || (r.length === 1 && r[0].trim() !== ""));
+$("prevPage").onclick=()=>{page--;renderRows()};$("nextPage").onclick=()=>{page++;renderRows()};
+document.querySelectorAll(".scenario").forEach(b=>b.addEventListener("click",()=>{selectedClass=b.dataset.class;document.querySelectorAll(".scenario").forEach(x=>x.classList.toggle("selected",x===b));const ids=DEMO?.true.map((c,i)=>c===selectedClass?i:-1).filter(i=>i>=0)||[];$("scenarioInfo").textContent=ids.length+" examples in "+selectedClass+" category";}));
+function chooseIndex(){const ids=DEMO.true.map((c,i)=>c===selectedClass?i:-1).filter(i=>i>=0);return ids[Math.floor(Math.random()*ids.length)]}
+$("randomScenario").onclick=()=>{if(!DEMO)return;selectedIndex=chooseIndex();runPrediction(selectedIndex)};
+$("runScenario").onclick=()=>{if(!DEMO||!META)return;selectedIndex=chooseIndex();runPrediction(selectedIndex)};
+async function runPrediction(i){
+ if(!META){toast("Inference API is offline. Start local_server.py first.");return}
+ const box=$("resultBox");box.innerHTML='<div class="empty"><div class="big">◌</div><b>Running XGBoost inference…</b></div>';$("inferenceTime").textContent="Processing";
+ const start=performance.now();
+ try{const out=await predictRows(DEMO.features,[DEMO.rows[i]]);const ms=(performance.now()-start).toFixed(0),pred=out.predictions[0],truth=DEMO.true[i],p=out.probabilities[0];$("inferenceTime").textContent=ms+" ms";
+ box.innerHTML=`<div class="resulttop"><span class="smallnote">PREDICTED CLASS</span><span class="severity ${pred==="Benign"?"":"attack"}">${pred==="Benign"?"BENIGN":"THREAT CLASS"}</span></div><div class="resultclass">${pred}</div><div class="confidence">Model confidence · ${(out.confidence[0]*100).toFixed(2)}%</div><div class="smallnote" style="margin-top:8px">Ground truth: <b style="color:#eaf4ff">${truth}</b> · ${pred===truth?'<span style="color:var(--green)">Correct on this sample</span>':'<span style="color:var(--amber)">Misclassified sample</span>'}</div><div style="margin-top:15px;font-size:10px;color:#8ea0b8">CLASS PROBABILITIES</div>${out.classes.map((c,j)=>({c,v:p[j]})).sort((a,b)=>b.v-a.v).map(x=>`<div class="probrow"><span>${x.c}</span><div class="track"><div class="fill" style="width:${x.v*100}%"></div></div><b>${(x.v*100).toFixed(1)}%</b></div>`).join("")}<details style="margin-top:14px"><summary style="cursor:pointer;color:var(--cyan);font-size:11px">Inspect all 42 input features</summary><div class="featuretable"><table><thead><tr><th>Feature</th><th>Value</th></tr></thead><tbody>${DEMO.features.map((f,j)=>`<tr><td>${escapeHtml(f)}</td><td>${Number(DEMO.rows[i][j]).toPrecision(6)}</td></tr>`).join("")}</tbody></table></div></details>`;
+ }catch(e){$("inferenceTime").textContent="Failed";box.innerHTML=`<div class="empty"><div class="big">!</div><b>Inference failed</b><p>${escapeHtml(e.message)}</p></div>`}
 }
-function toNumber(s) {
-  if (s === undefined || String(s).trim() === "") return NaN;   // an empty cell must not become 0
-  return Number(s);
-}
-
-// ---------- probability bars ----------
-function probBars(classes, probs, best) {
-  const order = classes.map((c, i) => [c, probs[i]]).sort((a, b) => b[1] - a[1]);
-  return el("div", {}, order.map(([c, p]) =>
-    el("div", { class: "bar-row" + (c === best ? " best" : "") },
-      el("span", { class: "small" }, c),
-      el("div", { class: "track" }, el("div", { class: "fill", style: "width:" + (100 * p).toFixed(1) + "%" })),
-      el("span", { class: "small" }, pct(p)))));
-}
-
-// ---------- demo tab ----------
-async function classifyOne(i) {
-  const box = $("demo-result");
-  box.replaceChildren(el("p", { class: "muted" }, "Classifying..."));
-  try {
-    const out = await apiPredict(DEMO.features, [DEMO.rows[i]]);
-    const pred = out.predictions[0], truth = DEMO.true[i];
-    const right = pred === truth;
-    const rows = DEMO.features.map((f, j) => el("tr", {}, el("td", {}, f), el("td", {}, String(DEMO.rows[i][j]))));
-    box.replaceChildren(el("div", { class: "result " + (right ? "ok" : "wrong") },
-      el("p", {}, "True category: ", badge(truth), "  Model says: ", badge(pred), "  ",
-        el("strong", { style: "color:var(--" + (right ? "good" : "bad") + ")" }, right ? "correct" : "wrong")),
-      probBars(out.classes, out.probabilities[0], pred),
-      el("details", {}, el("summary", {}, "Show the 42 feature values of this flow"),
-        el("div", { class: "scroll" }, el("table", {}, el("tbody", {}, rows))))));
-  } catch (e) {
-    box.replaceChildren(el("p", { class: "error" }, e.message));
-  }
-}
-function randomFlow() {
-  const cat = $("cat-select").value;
-  const pool = [];
-  DEMO.true.forEach((t, i) => { if (cat === "all" || t === cat) pool.push(i); });
-  if (!pool.length) return;
-  classifyOne(pool[Math.floor(Math.random() * pool.length)]);
-}
-async function classifyAll() {
-  const box = $("demo-all");
-  box.replaceChildren(el("p", { class: "muted" }, "Classifying " + DEMO.rows.length + " flows..."));
-  try {
-    const out = await apiPredict(DEMO.features, DEMO.rows);
-    const classes = out.classes;
-    const counts = {};   // counts[true][predicted]
-    classes.forEach((a) => { counts[a] = {}; classes.forEach((b) => { counts[a][b] = 0; }); });
-    DEMO.true.forEach((t, i) => { counts[t][out.predictions[i]]++; });
-
-    const head = el("tr", {}, el("th", {}, "true \\ predicted"), classes.map((c) => el("th", {}, c)), el("th", {}, "recall"));
-    const body = classes.map((a) => {
-      const total = classes.reduce((s, b) => s + counts[a][b], 0) || 1;
-      return el("tr", {}, el("td", {}, a),
-        classes.map((b) => {
-          const share = counts[a][b] / total;
-          return el("td", { style: "background: rgba(31,95,168," + (share * 0.55).toFixed(2) + ")" }, String(counts[a][b]));
-        }),
-        el("td", {}, pct(counts[a][a] / total)));
-    });
-    const correct = DEMO.true.filter((t, i) => t === out.predictions[i]).length;
-    const recalls = classes.map((a) => counts[a][a] / (classes.reduce((s, b) => s + counts[a][b], 0) || 1));
-    const mean = recalls.reduce((s, r) => s + r, 0) / recalls.length;
-    box.replaceChildren(
-      el("h3", {}, "All demo flows"),
-      el("p", { class: "small muted" }, correct + " of " + DEMO.rows.length + " flows classified correctly. The demo set has up to 100 flows per category, " +
-        "so the average recall over the categories (" + pct(mean) + ") is the fairer number here. These are not the full test-set scores."),
-      el("div", { class: "scroll" }, el("table", {}, el("thead", {}, head), el("tbody", {}, body))));
-  } catch (e) {
-    box.replaceChildren(el("p", { class: "error" }, e.message));
-  }
-}
-
-// ---------- upload tab ----------
-function csvEscape(s) { s = String(s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
-function downloadText(name, text) {
-  const a = el("a", { href: URL.createObjectURL(new Blob([text], { type: "text/csv" })), download: name });
-  document.body.append(a); a.click(); a.remove();
-}
-async function handleFile(file) {
-  const box = $("upload-result");
-  box.replaceChildren(el("p", { class: "muted" }, "Reading " + file.name + "..."));
-  try {
-    const table = parseCSV(await file.text());
-    if (table.length < 2) throw new Error("The file needs a header row and at least one data row.");
-    const columns = table[0].map((s) => s.trim());
-    const missing = META.features.filter((f) => !columns.includes(f));
-    if (missing.length) {
-      throw new Error(missing.length + " required column(s) missing: " + missing.slice(0, 8).join(", ") + (missing.length > 8 ? " ..." : ""));
-    }
-    let body = table.slice(1);
-    let note = "";
-    if (body.length > META.max_rows) {
-      note = "Only the first " + META.max_rows + " of " + body.length + " rows were classified.";
-      body = body.slice(0, META.max_rows);
-    }
-    const idx = META.features.map((f) => columns.indexOf(f));
-    const labelCol = columns.findIndex((c) => ["true_category", "category", "label"].includes(c));
-    const rows = body.map((r) => idx.map((j) => toNumber(r[j])));
-    for (let i = 0; i < rows.length; i++) {
-      const j = rows[i].findIndex((v) => !Number.isFinite(v));
-      if (j >= 0) throw new Error("Row " + (i + 1) + ", column " + META.features[j] + ": the value is empty or not a number.");
-    }
-
-    const out = await apiPredict(META.features, rows);
-    const total = out.n_rows;
-    const summary = out.classes.map((c) => [c, out.summary[c]]).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
-    const shown = Math.min(100, total);
-    const trs = [];
-    for (let i = 0; i < shown; i++) {
-      trs.push(el("tr", {}, el("td", {}, String(i + 1)), el("td", {}, out.predictions[i]), el("td", {}, pct(out.confidence[i])),
-        el("td", {}, labelCol >= 0 ? body[i][labelCol] : "")));
-    }
-    box.replaceChildren(
-      el("h3", {}, total + " flows classified"),
-      note ? el("p", { class: "small muted" }, note) : "",
-      el("div", {}, summary.map(([c, n]) => el("div", { class: "bar-row" },
-        el("span", { class: "small" }, c),
-        el("div", { class: "track" }, el("div", { class: "fill", style: "width:" + (100 * n / total).toFixed(1) + "%;background:" + (COLORS[c] || "var(--accent)") })),
-        el("span", { class: "small" }, String(n))))),
-      el("div", { class: "row", style: "margin-top:12px" },
-        el("button", { class: "btn", onclick: () => {
-          const lines = ["row,predicted,confidence"];
-          for (let i = 0; i < total; i++) lines.push([i + 1, out.predictions[i], out.confidence[i]].map(csvEscape).join(","));
-          downloadText("predictions.csv", lines.join("\n"));
-        } }, "Download all predictions (CSV)")),
-      el("div", { class: "scroll" }, el("table", {},
-        el("thead", {}, el("tr", {}, el("th", {}, "row"), el("th", {}, "predicted"), el("th", {}, "confidence"), el("th", {}, labelCol >= 0 ? columns[labelCol] : ""))),
-        el("tbody", {}, trs))),
-      total > shown ? el("p", { class: "small muted" }, "The table shows the first " + shown + " rows; the download has all of them.") : "");
-  } catch (e) {
-    box.replaceChildren(el("p", { class: "error" }, e.message));
-  }
-}
-function downloadSample() {
-  const n = 30, step = Math.floor(DEMO.rows.length / n);
-  const lines = [DEMO.features.concat(["true_category"]).map(csvEscape).join(",")];
-  for (let i = 0; i < n; i++) {
-    const k = i * step;
-    lines.push(DEMO.rows[k].concat([DEMO.true[k]]).map(csvEscape).join(","));
-  }
-  downloadText("sample_flows.csv", lines.join("\n"));
-}
-
-// ---------- tabs and start ----------
-function showTab(which) {
-  $("panel-demo").classList.toggle("hidden", which !== "demo");
-  $("panel-upload").classList.toggle("hidden", which !== "upload");
-  $("tab-demo").setAttribute("aria-selected", String(which === "demo"));
-  $("tab-upload").setAttribute("aria-selected", String(which === "upload"));
-}
-
-async function init() {
-  $("repo-link").href = REPO_URL;
-  $("tab-demo").addEventListener("click", () => showTab("demo"));
-  $("tab-upload").addEventListener("click", () => showTab("upload"));
-  $("btn-random").addEventListener("click", randomFlow);
-  $("btn-all").addEventListener("click", classifyAll);
-  $("btn-sample").addEventListener("click", downloadSample);
-  $("file-input").addEventListener("change", (ev) => { if (ev.target.files[0]) handleFile(ev.target.files[0]); });
-
-  try {
-    const res = await fetch(API);
-    if (!res.ok) throw new Error("status " + res.status);
-    META = await res.json();
-    $("feature-list").textContent = META.features.join(", ");
-    setStatus("Model ready: XGBoost " + META.xgboost_version + ", " + META.features.length + " features, " + META.classes.length + " categories.");
-  } catch (e) {
-    setStatus("The prediction API is not reachable. The results below are still valid.", true);
-    $("btn-random").disabled = true; $("btn-all").disabled = true; $("file-input").disabled = true;
-    return;
-  }
-  try {
-    const res = await fetch("demo_flows.json");
-    if (!res.ok) throw new Error("status " + res.status);
-    DEMO = await res.json();
-    const select = $("cat-select");
-    select.append(el("option", { value: "all" }, "all categories"));
-    DEMO.classes.forEach((c) => select.append(el("option", { value: c }, c)));
-    $("btn-sample").disabled = false;
-  } catch (e) {
-    $("demo-result").replaceChildren(el("p", { class: "error" }, "demo_flows.json is missing, so the demo flows are not available."));
-    $("btn-random").disabled = true; $("btn-all").disabled = true;
-  }
-}
+async function predictRows(columns,rows){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({columns,rows})});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.error||"API error "+r.status);return d}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function drawModelChart(){const cv=$("modelChart"),ctx=cv.getContext("2d"),dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=220;cv.width=w*dpr;cv.height=h*dpr;ctx.scale(dpr,dpr);const names=["Random Forest","XGBoost","LightGBM"],v=[.841,.832,.789],left=105,top=25,bw=w-left-40;ctx.font="11px system-ui";v.forEach((x,i)=>{const y=top+i*57;ctx.fillStyle="#a8b9ce";ctx.textAlign="right";ctx.fillText(names[i],left-12,y+17);ctx.fillStyle="#1a2a3e";ctx.fillRect(left,y,bw,17);ctx.fillStyle=i===1?"#51d8e8":"#638cff";ctx.fillRect(left,y,bw*x,17);ctx.fillStyle="#edf4ff";ctx.textAlign="left";ctx.fillText(x.toFixed(3),left+bw*x+7,y+14)});ctx.fillStyle="#71849d";ctx.font="9px system-ui";ctx.fillText("0.0",left,h-12);ctx.textAlign="right";ctx.fillText("1.0 macro-F1",left+bw,h-12)}
+function parseCSV(text){const lines=[];let row=[],field="",quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(quoted){if(c==='"'&&text[i+1]==='"'){field+='"';i++}else if(c==='"')quoted=false;else field+=c}else if(c==='"')quoted=true;else if(c===","){row.push(field);field=""}else if(c==="\n"){row.push(field);lines.push(row);row=[];field=""}else if(c!=="\r")field+=c}if(field.length||row.length){row.push(field);lines.push(row)}return lines.filter(r=>r.some(v=>v.trim()!==""))}
+let csvData=null;
+$("csvFile").addEventListener("change",async e=>{const f=e.target.files[0];csvData=null;$("runCsv").disabled=true;$("csvSummary").innerHTML="";if(!f)return;try{const text=await f.text(),parsed=parseCSV(text);if(parsed.length<2)throw Error("CSV needs a header and at least one data row.");const headers=parsed[0].map(x=>x.trim()),idx=META?.features.map(f=>headers.indexOf(f))||[];if(!META)throw Error("API metadata unavailable. Start local server.");const missing=META.features.filter(f=>!headers.includes(f));if(missing.length)throw Error("Missing required columns: "+missing.slice(0,8).join(", "));const rows=parsed.slice(1).map((r,i)=>{const vals=idx.map(j=>Number(r[j]));if(vals.some(v=>!Number.isFinite(v)))throw Error("Row "+(i+2)+" contains an empty or non-numeric feature.");return vals});if(rows.length>3000)throw Error("Maximum 3,000 rows per request.");csvData={columns:META.features,rows};$("runCsv").disabled=false;$("csvStatus").textContent=`Validated ${rows.length} rows and all 42 required features.`}catch(err){$("csvStatus").textContent=err.message}});
+$("runCsv").onclick=async()=>{if(!csvData)return;$("runCsv").disabled=true;$("csvStatus").textContent="Running batch inference…";try{const out=await predictRows(csvData.columns,csvData.rows);$("csvStatus").textContent=`Completed: ${out.n_rows} rows classified.`;$("csvSummary").innerHTML='<div class="classlist" style="margin-top:14px">'+out.classes.map((c,i)=>`<div class="classrow"><span>${c}</span><div class="track"><div class="fill" style="width:${100*out.summary[c]/out.n_rows}%;background:${COLORS[i]}"></div></div><b>${out.summary[c]}</b></div>`).join("")+'</div><button class="btn" id="downloadResults" style="margin-top:12px">Download predictions CSV</button>';$("downloadResults").onclick=()=>{const lines=["prediction,confidence",...out.predictions.map((p,i)=>`${p},${out.confidence[i]}`)];downloadBlob(lines.join("\n"),"iot_predictions.csv","text/csv")}}catch(err){$("csvStatus").textContent="Batch inference failed: "+err.message}finally{$("runCsv").disabled=false}};
+function downloadBlob(data,name,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
+$("downloadSample").onclick=()=>{if(!DEMO)return;const lines=[DEMO.features.join(","),...DEMO.rows.slice(0,25).map(r=>r.join(","))];downloadBlob(lines.join("\n"),"iot_sample_flows.csv","text/csv")};
+$("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");
+document.querySelectorAll(".nav a").forEach(a=>a.addEventListener("click",()=>{$("sidebar").classList.remove("open");document.querySelectorAll(".nav a").forEach(x=>x.classList.remove("active"));a.classList.add("active")}));
+window.addEventListener("resize",()=>{if(DEMO)drawDistribution();drawModelChart()});
 init();
 </script>
 </body>
