@@ -1,129 +1,281 @@
-# Scalable and Explainable Machine Learning for IoT Attack Detection
+﻿# IoT Cyber Threat Intelligence & Research Platform
 
-Attack detection on the **CIC-IoT-2023** dataset: data preparation, a comparison of three tree-based models
-(Random Forest, LightGBM, XGBoost) on three tasks of increasing difficulty, an explanation of the best boosted model
-with SHAP, and a small web demo.
+An end-to-end machine learning research project for detecting and classifying IoT network attacks using the CIC-IoT2023 dataset.
 
-**Live demo:** https://YOUR-PROJECT.vercel.app   *(replace after deploying, see [web/README.md](web/README.md))*
+The project covers dataset preparation, exploratory analysis, multi-class model evaluation, explainability research, model export, and an interactive web-based inference platform.
 
-Author: Sumair Ahmed, Department of Artificial Intelligence, University of Sindh
+<p align="center">
+  <a href="https://github.com/SUMAIRDERO62/IoT_Attack_Detection">GitHub Repository</a> ·
+  <a href="https://www.linkedin.com/in/sumair-ahmed-dero-70ba852a0">LinkedIn</a> ·
+  <a href="https://sumair-ahmed-dero-ai-journey.vercel.app/">Portfolio</a>
+</p>
 
 ---
 
-## Summary
+## Project Overview
 
-- **Data:** CIC-IoT-2023, 46.6 million labelled network flows from 105 IoT devices, 33 attacks in 7 categories.
-  A random 5% of every one of the 169 CSV files was used: 2,334,322 rows, 1,963,779 after removing duplicates.
-- **Tasks:** attack or benign (2 classes), attack category (8 classes), exact attack type (34 classes).
-- **Main metric:** macro-F1. The classes are extremely imbalanced (largest to smallest label 5,821 to 1), so accuracy is
-  above 0.99 for every model and says almost nothing.
-- **Result:** Random Forest and XGBoost are practically tied on the 8-class task (macro-F1 0.841 and 0.832).
-  XGBoost is better on rare attack types, the Random Forest is by far the fastest at prediction.
-- **Main caveat:** all models rely strongly on three features (`IAT`, `Number`, `Weight`). Without them the 8-class
-  macro-F1 falls to 0.66 to 0.69. I could not verify what `IAT` measures, so both scores are reported.
+IoT environments contain diverse devices and network protocols, making them attractive targets for denial-of-service attacks, botnets, reconnaissance, brute-force attempts, spoofing, and web-based attacks.
 
-## Results
+This project investigates how supervised machine learning can identify benign and malicious network flows and classify attacks into broader categories.
 
-Macro-F1 on a held-out test set of 392,756 flows (80/20 stratified split, one split, seed 42).
-In brackets: accuracy.
+The deployed inference artifact is an **8-class XGBoost model**. The web interface supports individual scenario inference, demo-flow exploration, and CSV batch prediction.
 
-| Task | Random Forest | XGBoost | LightGBM |
-|---|---|---|---|
-| 2 classes | **0.970** (0.9967) | 0.959 (0.9952) | 0.961 (0.9955) |
-| 8 classes | **0.841** (0.9945) | 0.832 (0.9946) | 0.789 (0.9939) |
-| 34 classes | 0.809 (0.9919) | **0.828** (0.9918) | not run |
-| 8 classes, without `IAT`, `Number`, `Weight` | 0.660 (0.8831) | 0.668 (0.8551) | **0.689** (0.8608) |
-| 2 classes, without `IAT`, `Number`, `Weight` | 0.941 (0.9935) | 0.927 (0.9909) | 0.930 (0.9913) |
+## Research Highlights
 
-Speed on the 8-class task (whole test set, shared Kaggle CPU, times change a little between runs):
-
-| Model | Training | Prediction of 392,756 flows | Saved model |
-|---|---|---|---|
-| Random Forest (50 trees) | about 80 to 95 s | about 1 s | 38 MB |
-| XGBoost (150 rounds) | about 165 to 205 s | about 5 to 6 s | 3 MB |
-| LightGBM (200 rounds) | about 145 to 160 s | about 19 to 27 s | not saved |
-
-### Findings
-
-1. **Accuracy hides the weak classes.** A model that always predicts the most common class scores 0.69 accuracy but
-   only 0.10 macro-F1 on the 8-class task.
-2. **Floods are easy, rare attacks are hard.** DDoS, DoS and Mirai labels have a recall of 0.96 or higher. Web attacks
-   and BruteForce are recognised worst (8-class recall of the Random Forest: Web 0.33, BruteForce 0.43).
-3. **The two kinds of mistake are not equal (2 classes).** The Random Forest flags about 560 of 10,987 benign test flows
-   as attacks and misses about 725 attacks. XGBoost flags about 50 benign flows and misses about 1,830 attacks.
-4. **The task difficulty matters.** Macro-F1 falls from about 0.96 to 0.97 (2 classes) to about 0.83 to 0.84 (8 classes).
-   The loss sits in the rare labels, not in the floods.
-5. **Explainability (SHAP on the XGBoost model).** `IAT` carries 28.8% of the total importance and `Number` 12.6%;
-   together with `Weight` the three features carry 43.2%. `IAT` is among the three most important features of every
-   category.
-
-### Figures
-
-All figures are produced by the notebook and stored in [`figures/`](figures/).
-
-| | |
+| Item | Details |
 |---|---|
-| ![Model comparison](figures/09_model_comparison_8class.png) | ![Recall per category](figures/10_recall_per_category.png) |
-| Model comparison, 8 classes | Recall per category |
-| ![Recall per label](figures/12_recall_per_label_34class.png) | ![SHAP](figures/15_shap_global_importance.png) |
-| Recall of the 34 exact attack types | Feature importance (SHAP) |
+| Dataset | CIC-IoT2023 |
+| Dataset source | Kaggle mirror documented below |
+| Data sampling | 5% sample from each of 169 CSV files |
+| Sampled rows | 2,334,322 |
+| Rows after duplicate removal | 1,963,779 |
+| Evaluation split | Stratified 80/20 split |
+| Held-out test flows | 392,756 |
+| Random seed | 42 |
+| Compared models | Random Forest, XGBoost, LightGBM |
+| Deployed model | XGBoost, 8 classes |
+| Input features | 42 |
+| Demo examples | 800 held-out test flows |
 
-## Repository
+### Main evaluation results
 
-```
-.
-├── notebooks/IoT_Attack_Detection_v2.ipynb   complete analysis, every step explained, with outputs
-├── figures/                                  all figures of the notebook (PNG)
-├── results/results.csv                       every model run: macro-F1, accuracy, times
-├── scripts/export_web_files.py               exports the model and demo flows for the web app
-├── web/                                      the Vercel app (static page + Python API)
-├── requirements.txt                          environment of the notebook
+Macro-F1 is emphasized because the dataset is highly imbalanced.
+
+| Classification task | Random Forest | XGBoost | LightGBM |
+|---|---:|---:|---:|
+| Binary classification | 0.970 | 0.959 | 0.961 |
+| 8 attack categories | 0.841 | 0.832 | 0.789 |
+| 34 attack types | 0.809 | 0.828 | Not run |
+| 8 classes without IAT, Number, Weight | 0.660 | 0.668 | 0.689 |
+
+The deployed XGBoost model achieved **99.46% accuracy** on the full held-out 8-class test set, with a macro-F1 score of **0.832**.
+
+The balanced 800-flow web demonstration achieved **86.5% accuracy (692/800)**. This is a separate evaluation subset and must not be confused with the full held-out test-set result.
+
+Model export validation achieved 100% prediction agreement between the original and exported model on the 800 demonstration flows. Prediction agreement is not classification accuracy.
+
+## Attack Categories
+
+The web inference model predicts one of these eight categories:
+
+1. Benign
+2. BruteForce
+3. DDoS
+4. DoS
+5. Mirai
+6. Recon
+7. Spoofing
+8. Web
+
+## Platform Features
+
+- Interactive cybersecurity research dashboard.
+- Live inference through the exported XGBoost model.
+- Eight attack-category scenarios using real held-out demo examples.
+- Inspection of all 42 model input features.
+- Demo dataset browser with category filtering.
+- CSV upload and batch inference.
+- Input validation and prediction confidence.
+- Class probability output.
+- Downloadable prediction results.
+- Research methodology, metrics, and limitations.
+- Researcher profile, portfolio, and dataset attribution links.
+
+## Technology Stack
+
+| Area | Technologies |
+|---|---|
+| Language | Python |
+| Data processing | Pandas, NumPy, PyArrow |
+| Machine learning | Scikit-learn, XGBoost, LightGBM |
+| Explainability | SHAP |
+| Visualization | Matplotlib, Seaborn |
+| Model serving | Python HTTP handler, XGBoost |
+| Frontend | HTML, CSS, JavaScript |
+| Deployment configuration | Vercel |
+| Research environment | Kaggle Notebooks |
+
+## Repository Structure
+
+```text
+IoT_Attack_Detection/
+├── notebooks/
+│   └── IoT_Attack_Detection_v2.ipynb
+├── scripts/
+│   └── export_web_files.py
+├── figures/
+├── results/
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── METHODOLOGY.md
+│   ├── RESULTS.md
+│   ├── DEMO_GUIDE.md
+│   └── FUTURE_WORK.md
+├── web/
+│   ├── api/
+│   │   └── predict.py
+│   ├── model/
+│   │   ├── model_meta.json
+│   │   └── xgb_8class.ubj
+│   ├── public/
+│   │   ├── index.html
+│   │   ├── index-new.html
+│   │   ├── demo_flows.json
+│   │   └── figures/
+│   ├── local_server.py
+│   ├── requirements.txt
+│   └── vercel.json
+├── requirements.txt
+├── LICENSE
 └── README.md
 ```
 
-## Reproduce the analysis
+## Run the Web Platform Locally
 
-The notebook was run on Kaggle (CPU). It takes about 40 minutes.
+### 1. Clone the repository
 
-1. Create a Kaggle notebook and import `notebooks/IoT_Attack_Detection_v2.ipynb`.
-2. Add the dataset **UNB CIC IOT 2023 Dataset** (`madhavmalhotra/unb-cic-iot-dataset`) as an input.
-3. Run all cells. The first cell with `QUICK = True` runs a small dry run in a few minutes.
-   `RUN_34CLASS` and `RUN_SPLIT_CHECK` switch the slowest parts on or off.
+```bash
+git clone https://github.com/SUMAIRDERO62/IoT_Attack_Detection.git
+cd IoT_Attack_Detection
+```
 
-The random seed is 42 everywhere. Library versions are in [`requirements.txt`](requirements.txt).
-The raw data is not stored in this repository.
+### 2. Create a virtual environment
 
-## Run or deploy the web demo
+Linux / WSL:
 
-See [web/README.md](web/README.md). The page lets you classify 800 real test flows or upload your own CSV with the
-42 feature columns of the model.
+```bash
+python3 -m venv ~/.venvs/iot-attack-detection
+source ~/.venvs/iot-attack-detection/bin/activate
+```
 
-## Limitations
+Windows PowerShell:
 
-- One random 80/20 split and one seed. Differences of about 0.01 between models are not reliable.
-  Neighbouring rows of a capture are similar, so a random split is probably somewhat optimistic.
-- Only a 5% sample of the data, and no hyperparameter tuning (first configurations only).
-- The rare labels have only 12 to 60 test rows, so their recall values are noisy.
-- It is unclear what `IAT`, `Number` and `Weight` represent, and the models depend strongly on them.
-- Prediction times were measured on the whole test set with all cores of a shared machine. They are not the latency of one
-  flow on an IoT device.
-- No neural network was trained.
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
 
-### Future work
+### 3. Install web dependencies
 
-A stricter split (for example by capture file); removing `IAT` alone to see which of the three features the result
-depends on; several seeds and tuning; a small neural network for comparison; more of the 46.6 million rows;
-latency and memory on a small device such as a Raspberry Pi.
+```bash
+pip install -r web/requirements.txt
+```
 
-## Dataset and citation
+### 4. Start the local inference server
 
-Neto, E. C. P., Dadkhah, S., Ferreira, R., Zohourian, A., Lu, R., Ghorbani, A. A. (2023).
-*CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment.*
-Sensors, 23(13), 5941. https://doi.org/10.3390/s23135941
+```bash
+cd web
+python local_server.py
+```
 
-The dataset belongs to the Canadian Institute for Cybersecurity (University of New Brunswick) and must be cited when it
-is used. Kaggle mirror used here: `madhavmalhotra/unb-cic-iot-dataset`.
+Open:
 
-## Licence
+http://localhost:8000
 
-The code is released under the MIT licence (see [LICENSE](LICENSE)). The dataset has its own terms.
+The local server loads the exported model and serves the frontend and prediction API from the same origin.
+
+Keep the model files in `web/model/`. The server requires the model artifact and metadata.
+
+## Prediction API
+
+### Model information
+
+```http
+GET /api/predict
+```
+
+Returns model name, XGBoost version, feature names, class labels, and maximum batch size.
+
+### Batch inference
+
+```http
+POST /api/predict
+Content-Type: application/json
+```
+
+Request structure:
+
+```json
+{
+  "columns": ["feature_1", "feature_2"],
+  "rows": [[1.2, 3.4]]
+}
+```
+
+The example above illustrates the API shape only. Actual requests must contain all 42 required model features and their numeric values.
+
+The API validates feature availability, row shape, numeric values, finite values, and batch size. It returns predicted classes, confidence, class probabilities, and prediction counts.
+
+Maximum batch size: 3,000 rows.
+
+## Reproduce the Research
+
+The main experiment is documented in:
+
+`notebooks/IoT_Attack_Detection_v2.ipynb`
+
+The notebook was developed in Kaggle.
+
+1. Open Kaggle Notebooks.
+2. Import the repository notebook.
+3. Add the CIC-IoT2023 dataset input.
+4. Install or select compatible dependencies.
+5. Run the notebook cells in order.
+6. Review preprocessing, experiments, evaluation, and explainability outputs.
+
+The notebook uses a 5% per-file sampling strategy and random seed 42. Full raw dataset files are not stored in this GitHub repository.
+
+## Dataset and Attribution
+
+**Kaggle dataset input used in the project:**
+
+https://www.kaggle.com/datasets/madhavmalhotra/unb-cic-iot-dataset
+
+**Official CIC-IoT2023 dataset page:**
+
+https://www.unb.ca/cic/datasets/iotdataset-2023.html
+
+**Research paper:**
+
+Neto, E. C. P., Dadkhah, S., Ferreira, R., Zohourian, A., Lu, R., & Ghorbani, A. A. (2023). CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment. *Sensors, 23*(13), 5941.
+
+https://doi.org/10.3390/s23135941
+
+The dataset is owned by its respective authors/institution and is subject to its own terms. Please cite the original dataset paper when using it.
+
+## Research Limitations
+
+- The experiments use a 5% sample rather than the complete dataset.
+- Evaluation uses one stratified random split and one seed.
+- Similar network flows from the same capture may appear across the split, potentially making the evaluation optimistic.
+- Rare attack classes have limited test examples and less stable recall.
+- Removing IAT, Number, and Weight reduces 8-class macro-F1 substantially, indicating dependence on these features.
+- The real-world meaning and availability of all features should be verified before operational deployment.
+- Performance on unseen networks, devices, and attack variants has not been established.
+- The platform is a research demonstration, not a production network security appliance.
+
+See `docs/RESULTS.md` and `docs/FUTURE_WORK.md` for more detail.
+
+## Project Documentation
+
+- [System Architecture](docs/ARCHITECTURE.md)
+- [Research Methodology](docs/METHODOLOGY.md)
+- [Experimental Results](docs/RESULTS.md)
+- [Demonstration Guide](docs/DEMO_GUIDE.md)
+- [Future Work](docs/FUTURE_WORK.md)
+- [Web Application Guide](web/README.md)
+
+## Author
+
+**Sumair Ahmed**  
+Department of Artificial Intelligence, University of Sindh
+
+- LinkedIn: https://www.linkedin.com/in/sumair-ahmed-dero-70ba852a0
+- Portfolio: https://sumair-ahmed-dero-ai-journey.vercel.app/
+- GitHub: https://github.com/SUMAIRDERO62
+
+## License
+
+The source code is released under the MIT License. See [LICENSE](LICENSE).
+
+The dataset remains subject to its original license and terms.
