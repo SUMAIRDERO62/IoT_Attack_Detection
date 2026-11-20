@@ -1,40 +1,110 @@
-# Web demo (Vercel)
+"""Prediction API for the IoT attack detector (Vercel Python function).
 
-A static page (`public/index.html`) and one Python function (`api/predict.py`) that serves the
-8-class XGBoost model.
+GET /api/predict -> model information (feature names, class names)
+POST /api/predict -> {"columns": [...], "rows": [[...], ...]}
+returns the predicted attack category and the class probabilities for every row
+"""
+import json
+import os
+from http.server import BaseHTTPRequestHandler
 
-```
-web/
-├── api/predict.py          GET: model information, POST: classify flows
-├── public/index.html       the page
-├── public/demo_flows.json  800 demo flows from the test set        (written by scripts/export_web_files.py)
-├── public/figures/         PNG figures shown on the page           (copied from the notebook output)
-├── model/xgb_8class.ubj    the XGBoost model                       (written by scripts/export_web_files.py)
-├── model/model_meta.json   feature order and class names           (written by scripts/export_web_files.py)
-├── requirements.txt        only what the API needs (numpy, scipy, xgboost-cpu)
-├── vercel.json
-└── .python-version
-```
+import numpy as np
+import xgboost as xgb
 
-The API uses `xgboost-cpu`, the CPU-only build of XGBoost. It is a few MB instead of several hundred and is the
-same version (3.4.1) that trained the model.
+HERE = os.path.dirname(os.path.abspath(**file**))
+MODEL_DIR = os.path.join(os.path.dirname(HERE), "model")
 
-## Deploy
-1. Push the repository to GitHub.
-2. On vercel.com choose **Add New, Project** and import the repository.
-3. Set **Root Directory** to `web`, **Framework Preset** to `Other` and leave the Build Command empty.
-4. Click **Deploy**.
+MAX_ROWS = 3000 # keeps the request below Vercel's request size limit
+MAX_BODY = 4_000_000 # bytes
 
-If the page shows 404, check that Root Directory is `web` and Output Directory is `public`.
-If the page loads but says the API is not reachable, open the function logs in the Vercel dashboard and check that
-`model/xgb_8class.ubj` and `model/model_meta.json` are in the repository.
+# the model is loaded once per function instance, not once per request
 
-## API
-```
-POST /api/predict
-{"columns": ["flow_duration", ...], "rows": [[0.0, 54.0, ...], ...]}
+with open(os.path.join(MODEL_DIR, "model_meta.json")) as f:
+META = json.load(f)
 
-200 {"predictions": ["DDoS", ...], "confidence": [0.99, ...], "probabilities": [[...], ...], "classes": [...], "summary": {...}}
-400 {"error": "..."}
-```
-Columns can be in any order and extra columns are ignored. At most 3000 rows per request.
+# model_meta.json is written by the export step; accept the usual key names
+
+FEATURES = META.get("features") or META.get("feature_names")
+CLASSES = META.get("classes_8") or META.get("classes")
+if not FEATURES or not CLASSES:
+raise RuntimeError("model_meta.json needs a list of features and a list of classes")
+
+BOOSTER = xgb.Booster()
+BOOSTER.load_model(os.path.join(MODEL_DIR, "xgb_8class.ubj"))
+
+def predict_rows(columns, rows):
+"""Classify flows. `columns` names the columns of `rows`; they are put in the model's feature order."""
+if not isinstance(columns, list) or not isinstance(rows, list) or not rows:
+raise ValueError("send a list of column names and a non-empty list of rows")
+if len(rows) > MAX_ROWS:
+raise ValueError(f"at most {MAX_ROWS} rows per request (got {len(rows)})")
+
+    index = {name: i for i, name in enumerate(columns)}
+    missing = [name for name in FEATURES if name not in index]
+    if missing:
+        shown = ", ".join(missing[:8]) + (" ..." if len(missing) > 8 else "")
+        raise ValueError(f"{len(missing)} required column(s) missing: {shown}")
+
+    try:
+        X = np.asarray(rows, dtype=np.float64)
+    except (TypeError, ValueError):
+        raise ValueError("every feature value must be a number")
+    if X.ndim != 2 or X.shape[1] != len(columns):
+        raise ValueError("every row must have one value per column")
+    X = X[:, [index[name] for name in FEATURES]]
+    if not np.isfinite(X).all():
+        raise ValueError("values must be finite numbers (no empty cells, NaN or inf)")
+
+    proba = BOOSTER.predict(xgb.DMatrix(X, feature_names=FEATURES))
+    best = proba.argmax(axis=1)
+    predictions = [CLASSES[i] for i in best]
+
+    counts = {c: 0 for c in CLASSES}
+    for p in predictions:
+        counts[p] += 1
+
+    return {
+        "n_rows": int(X.shape[0]),
+        "classes": CLASSES,
+        "predictions": predictions,
+        "confidence": [round(float(proba[i, b]), 4) for i, b in enumerate(best)],
+        "probabilities": [[round(float(v), 4) for v in row] for row in proba],
+        "summary": counts,
+    }
+
+class handler(BaseHTTPRequestHandler):
+def \_send(self, code, payload):
+body = json.dumps(payload).encode("utf-8")
+self.send_response(code)
+self.send_header("Content-Type", "application/json")
+self.send_header("Content-Length", str(len(body)))
+self.send_header("Cache-Control", "no-store")
+self.end_headers()
+self.wfile.write(body)
+
+    def do_GET(self):
+        self._send(200, {
+            "model": "XGBoost, 8 attack categories",
+            "xgboost_version": xgb.__version__,
+            "features": FEATURES,
+            "classes": CLASSES,
+            "max_rows": MAX_ROWS,
+        })
+
+    def do_POST(self):
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+            if length > MAX_BODY:
+                return self._send(413, {"error": "request is too large"})
+            payload = json.loads(self.rfile.read(length) or b"{}")
+            result = predict_rows(payload.get("columns"), payload.get("rows"))
+            self._send(200, result)
+        except json.JSONDecodeError:
+            self._send(400, {"error": "the request body is not valid JSON"})
+        except ValueError as err:
+            self._send(400, {"error": str(err)})
+        except Exception:
+            self._send(500, {"error": "the model could not process this request"})
+
+    def log_message(self, fmt, *args):
+        pass
