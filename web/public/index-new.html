@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -18,34 +18,34 @@ a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cur
 <body>
 <div class="shell">
 <aside class="sidebar" id="sidebar">
-  <div class="brand"><div class="brandmark">⌁</div><div><strong>SENTINEL</strong><small>IoT THREAT INTELLIGENCE</small></div></div>
+  <div class="brand"><div class="brandmark">âŒ</div><div><strong>SENTINEL</strong><small>IoT THREAT INTELLIGENCE</small></div></div>
   <div class="navlabel">WORKSPACE</div>
   <nav class="nav">
-    <a class="active" href="#overview"><span class="navicon">◈</span>Overview</a>
-    <a href="#detection"><span class="navicon">⌁</span>Detection lab</a>
-    <a href="#dataset"><span class="navicon">▦</span>Dataset explorer</a>
-    <a href="#analytics"><span class="navicon">▥</span>Research analytics</a>
+    <a class="active" href="#overview"><span class="navicon">â—ˆ</span>Overview</a>
+    <a href="#detection"><span class="navicon">âŒ</span>Detection lab</a>
+    <a href="#dataset"><span class="navicon">â–¦</span>Dataset explorer</a>
+    <a href="#analytics"><span class="navicon">â–¥</span>Research analytics</a>
   </nav>
   <div class="navlabel">RESEARCH</div>
   <nav class="nav">
-    <a href="#methodology"><span class="navicon">⌘</span>Methodology</a>
-    <a href="#limitations"><span class="navicon">△</span>Limitations</a>
-    <a href="#references"><span class="navicon">↗</span>References</a>
+    <a href="#methodology"><span class="navicon">âŒ˜</span>Methodology</a>
+    <a href="#limitations"><span class="navicon">â–³</span>Limitations</a>
+    <a href="#references"><span class="navicon">â†—</span>References</a>
   </nav>
   <div class="sidebottom"><b>Research prototype</b><p>Academic demonstration only. Not a production network security system.</p></div>
 </aside>
 <main class="main">
   <header class="topbar">
-    <div style="display:flex;align-items:center;gap:12px"><button class="btn mobilemenu" id="menuBtn">☰</button><div class="crumb">Workspace&nbsp; / &nbsp;<b>Threat overview</b></div></div>
+    <div style="display:flex;align-items:center;gap:12px"><button class="btn mobilemenu" id="menuBtn">â˜°</button><div class="crumb">Workspace&nbsp; / &nbsp;<b>Threat overview</b></div></div>
     <div class="topright"><div class="statuspill"><span class="dot" id="apiDot"></span><span id="apiStatus">Connecting to inference API</span></div><div class="avatar">SA</div></div>
   </header>
   <section class="hero" id="overview">
-    <div><div class="eyebrow">CIC-IoT-2023 · MACHINE LEARNING RESEARCH</div><h1>Understand the signal.<br><span style="color:var(--cyan)">Detect the threat.</span></h1><p>An interactive research environment for classifying IoT network flows with an exported XGBoost model. Explore held-out traffic, inspect model outputs and review the evidence behind the experiment.</p></div>
-    <div class="heroactions"><a class="btn" href="#analytics">Explore research ↗</a><a class="btn primary" href="#detection">Launch detection lab →</a></div>
+    <div><div class="eyebrow">CIC-IoT-2023 Â· MACHINE LEARNING RESEARCH</div><h1>Understand the signal.<br><span style="color:var(--cyan)">Detect the threat.</span></h1><p>An interactive research environment for classifying IoT network flows with an exported XGBoost model. Explore held-out traffic, inspect model outputs and review the evidence behind the experiment.</p></div>
+    <div class="heroactions"><a class="btn" href="#analytics">Explore research â†—</a><a class="btn primary" href="#detection">Launch detection lab â†’</a></div>
   </section>
   <section class="metrics">
-    <article class="metric"><div class="label">Held-out test accuracy</div><div class="value accent">99.46%</div><div class="note">392,756 test flows · reported experiment</div></article>
-    <article class="metric"><div class="label">8-class macro F1</div><div class="value">0.832</div><div class="note">XGBoost · primary comparison metric</div></article>
+    <article class="metric"><div class="label">Held-out test accuracy</div><div class="value accent">99.46%</div><div class="note">392,756 test flows Â· reported experiment</div></article>
+    <article class="metric"><div class="label">8-class macro F1</div><div class="value">0.832</div><div class="note">XGBoost Â· primary comparison metric</div></article>
     <article class="metric"><div class="label">Model input features</div><div class="value">42</div><div class="note">Ordered from exported metadata</div></article>
     <article class="metric"><div class="label">Attack categories</div><div class="value">08</div><div class="note">One benign + seven attack families</div></article>
   </section>
@@ -53,43 +53,43 @@ a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cur
     <div class="sectionhead"><div><h2>Traffic intelligence</h2><p>Composition of the curated held-out demonstration sample</p></div><span class="tag">800 real test-set flows</span></div>
     <div class="overviewgrid">
       <div class="panel"><div class="paneltitle"><h3>Demo sample composition</h3><span>Ground-truth labels</span></div><canvas id="distChart" class="chart" height="220"></canvas><div class="legend" id="chartLegend"></div></div>
-      <div class="panel"><div class="paneltitle"><h3>Category distribution</h3><span id="sampleCount">Loading sample…</span></div><div class="classlist" id="classList"><p class="smallnote">Reading the real demo-flow file…</p></div></div>
+      <div class="panel"><div class="paneltitle"><h3>Category distribution</h3><span id="sampleCount">Loading sampleâ€¦</span></div><div class="classlist" id="classList"><p class="smallnote">Reading the real demo-flow fileâ€¦</p></div></div>
     </div>
   </section>
   <section class="section" id="detection">
-    <div class="sectionhead"><div><h2>Live detection lab</h2><p>Run inference against the locally loaded XGBoost model — not a simulated result.</p></div><span class="tag">POST /api/predict</span></div>
+    <div class="sectionhead"><div><h2>Live detection lab</h2><p>Run inference against the locally loaded XGBoost model â€” not a simulated result.</p></div><span class="tag">POST /api/predict</span></div>
     <div class="labgrid">
       <div class="panel">
         <div class="paneltitle"><h3>Choose a traffic scenario</h3><span>Real held-out examples</span></div>
         <div class="scenario-grid" id="scenarioGrid">
-          <button class="scenario selected" data-class="Benign"><span class="sicon">◉</span>Benign</button>
-          <button class="scenario" data-class="DDoS"><span class="sicon">⇣</span>DDoS</button>
-          <button class="scenario" data-class="DoS"><span class="sicon">▤</span>DoS</button>
-          <button class="scenario" data-class="Mirai"><span class="sicon">⌘</span>Mirai</button>
-          <button class="scenario" data-class="BruteForce"><span class="sicon">⌗</span>BruteForce</button>
-          <button class="scenario" data-class="Recon"><span class="sicon">⌕</span>Recon</button>
-          <button class="scenario" data-class="Spoofing"><span class="sicon">⟡</span>Spoofing</button>
-          <button class="scenario" data-class="Web"><span class="sicon">◎</span>Web</button>
+          <button class="scenario selected" data-class="Benign"><span class="sicon">â—‰</span>Benign</button>
+          <button class="scenario" data-class="DDoS"><span class="sicon">â‡£</span>DDoS</button>
+          <button class="scenario" data-class="DoS"><span class="sicon">â–¤</span>DoS</button>
+          <button class="scenario" data-class="Mirai"><span class="sicon">âŒ˜</span>Mirai</button>
+          <button class="scenario" data-class="BruteForce"><span class="sicon">âŒ—</span>BruteForce</button>
+          <button class="scenario" data-class="Recon"><span class="sicon">âŒ•</span>Recon</button>
+          <button class="scenario" data-class="Spoofing"><span class="sicon">âŸ¡</span>Spoofing</button>
+          <button class="scenario" data-class="Web"><span class="sicon">â—Ž</span>Web</button>
         </div>
-        <div class="labcontrols"><button class="btn primary" id="runScenario" disabled>Run model prediction →</button><button class="btn" id="randomScenario" disabled>Random example</button><span class="smallnote" id="scenarioInfo">Loading demo examples…</span></div>
+        <div class="labcontrols"><button class="btn primary" id="runScenario" disabled>Run model prediction â†’</button><button class="btn" id="randomScenario" disabled>Random example</button><span class="smallnote" id="scenarioInfo">Loading demo examplesâ€¦</span></div>
         <div style="margin-top:16px" class="smallnote">Each scenario selects an actual row from the 800-flow held-out sample. The model receives all 42 features in the metadata-defined order.</div>
       </div>
-      <div class="panel"><div class="paneltitle"><h3>Inference output</h3><span id="inferenceTime">Awaiting input</span></div><div class="resultbox" id="resultBox"><div class="empty"><div class="big">⌁</div><b>Detection output will appear here</b><p>Choose a scenario and run inference.</p></div></div></div>
+      <div class="panel"><div class="paneltitle"><h3>Inference output</h3><span id="inferenceTime">Awaiting input</span></div><div class="resultbox" id="resultBox"><div class="empty"><div class="big">âŒ</div><b>Detection output will appear here</b><p>Choose a scenario and run inference.</p></div></div></div>
     </div>
   </section>
   <section class="section" id="dataset">
-    <div class="sectionhead"><div><h2>Dataset explorer</h2><p>Search and inspect the real held-out sample, or submit a compatible CSV for batch inference.</p></div><span class="tag">42 features · 800 rows</span></div>
+    <div class="sectionhead"><div><h2>Dataset explorer</h2><p>Search and inspect the real held-out sample, or submit a compatible CSV for batch inference.</p></div><span class="tag">42 features Â· 800 rows</span></div>
     <div class="datasetgrid">
       <div class="panel">
         <div class="paneltitle"><h3>Sample flow browser</h3><span id="rowsLabel">0 records</span></div>
-        <div class="filters"><input id="searchRows" placeholder="Search category or row…" aria-label="Search rows"><select id="filterClass"><option value="all">All categories</option></select></div>
-        <div class="tablewrap"><table><thead><tr><th>Row</th><th>Ground truth</th><th>Duration</th><th>Protocol</th></tr></thead><tbody id="sampleRows"><tr><td colspan="4">Loading sample rows…</td></tr></tbody></table></div>
-        <div class="pagination"><span id="pageInfo">Page 1</span><div><button class="btn" id="prevPage">←</button> <button class="btn" id="nextPage">→</button></div></div>
+        <div class="filters"><input id="searchRows" placeholder="Search category or rowâ€¦" aria-label="Search rows"><select id="filterClass"><option value="all">All categories</option></select></div>
+        <div class="tablewrap"><table><thead><tr><th>Row</th><th>Ground truth</th><th>Duration</th><th>Protocol</th></tr></thead><tbody id="sampleRows"><tr><td colspan="4">Loading sample rowsâ€¦</td></tr></tbody></table></div>
+        <div class="pagination"><span id="pageInfo">Page 1</span><div><button class="btn" id="prevPage">â†</button> <button class="btn" id="nextPage">â†’</button></div></div>
         <p class="smallnote">Select a row to load it into the detection lab. Feature values are available in the inference detail panel.</p>
       </div>
       <div class="panel">
         <div class="paneltitle"><h3>Batch CSV inference</h3><span>Up to 3,000 rows / request</span></div>
-        <div class="dropzone"><div style="font-size:25px;color:var(--cyan)">⇧</div><b>Upload network-flow CSV</b><p>CSV must contain the exact 42 model feature columns.</p><input id="csvFile" type="file" accept=".csv,text/csv"></div>
+        <div class="dropzone"><div style="font-size:25px;color:var(--cyan)">â‡§</div><b>Upload network-flow CSV</b><p>CSV must contain the exact 42 model feature columns.</p><input id="csvFile" type="file" accept=".csv,text/csv"></div>
         <div class="labcontrols"><button class="btn primary" id="runCsv" disabled>Validate & classify CSV</button><button class="btn" id="downloadSample" disabled>Download sample CSV</button></div>
         <div id="csvStatus" class="smallnote" style="margin-top:12px">Files are processed by this research demo API and are not saved by the interface.</div>
         <div id="csvSummary"></div>
@@ -97,7 +97,7 @@ a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cur
     </div>
   </section>
   <section class="section" id="analytics">
-    <div class="sectionhead"><div><h2>Research analytics</h2><p>Published experiment metrics — kept separate from the 800-row interactive demo.</p></div><span class="tag">Held-out evaluation</span></div>
+    <div class="sectionhead"><div><h2>Research analytics</h2><p>Published experiment metrics â€” kept separate from the 800-row interactive demo.</p></div><span class="tag">Held-out evaluation</span></div>
     <div class="analyticsgrid">
       <div class="panel"><div class="paneltitle"><h3>Eight-class macro-F1 comparison</h3><span>Higher is better</span></div><canvas id="modelChart" class="chart" height="220"></canvas><div class="legend"><span><i style="background:#51d8e8"></i>Macro-F1</span></div></div>
       <div class="panel"><div class="paneltitle"><h3>Experiment scorecard</h3><span>Macro-F1</span></div><div class="tablewrap"><table class="resulttable"><thead><tr><th>Model</th><th>2-class</th><th>8-class</th><th>8-class* </th><th>34-class</th></tr></thead><tbody><tr><td>Random Forest</td><td>0.970</td><td>0.841</td><td>0.660</td><td>0.809</td></tr><tr><td><b>XGBoost</b></td><td>0.959</td><td><b>0.832</b></td><td>0.668</td><td>0.828</td></tr><tr><td>LightGBM</td><td>0.961</td><td>0.789</td><td>0.689</td><td>Not run</td></tr></tbody></table></div><p class="smallnote" style="margin-top:10px">* Without IAT, Number and Weight. One random split and one seed; differences around 0.01 are not conclusive.</p></div>
@@ -110,7 +110,7 @@ a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cur
   </section>
   <section class="section" id="methodology">
     <div class="sectionhead"><div><h2>Research methodology</h2><p>From benchmark data to browser-accessible inference.</p></div><span class="tag">Experimental pipeline</span></div>
-    <div class="panel"><div class="method"><div class="step"><b>01 · DATA</b><span>CIC-IoT-2023</span></div><div class="step"><b>02 · SAMPLE</b><span>5% training sample</span></div><div class="step"><b>03 · FEATURES</b><span>42 model inputs</span></div><div class="step"><b>04 · TRAIN</b><span>XGBoost classifier</span></div><div class="step"><b>05 · EVALUATE</b><span>Held-out test set</span></div><div class="step"><b>06 · EXPORT</b><span>UBJ model + API</span></div></div></div>
+    <div class="panel"><div class="method"><div class="step"><b>01 Â· DATA</b><span>CIC-IoT-2023</span></div><div class="step"><b>02 Â· SAMPLE</b><span>5% training sample</span></div><div class="step"><b>03 Â· FEATURES</b><span>42 model inputs</span></div><div class="step"><b>04 Â· TRAIN</b><span>XGBoost classifier</span></div><div class="step"><b>05 Â· EVALUATE</b><span>Held-out test set</span></div><div class="step"><b>06 Â· EXPORT</b><span>UBJ model + API</span></div></div></div>
   </section>
   <section class="section" id="limitations">
     <div class="sectionhead"><div><h2>Limitations & future work</h2><p>Interpret results in the context of the experiment's known constraints.</p></div><span class="tag">Research transparency</span></div>
@@ -128,9 +128,9 @@ a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cur
   </section>
   <section class="section" id="references">
     <div class="sectionhead"><div><h2>Dataset reference</h2><p>Primary benchmark citation and project attribution.</p></div><span class="tag">Citation</span></div>
-    <div class="panel"><p style="font-size:12px;margin:0 0 8px">Neto, E. C. P., Dadkhah, S., Ferreira, R., Zohourian, A., Lu, R., & Ghorbani, A. A. (2023). <i>CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment.</i> Sensors, 23(13), 5941.</p><a style="color:var(--cyan);font-size:11px" href="https://doi.org/10.3390/s23135941" target="_blank" rel="noreferrer">https://doi.org/10.3390/s23135941 ↗</a><p class="smallnote" style="margin-top:12px">Built by Sumair Ahmed · Department of Artificial Intelligence, University of Sindh.</p></div>
+    <div class="panel"><p style="font-size:12px;margin:0 0 8px">Neto, E. C. P., Dadkhah, S., Ferreira, R., Zohourian, A., Lu, R., & Ghorbani, A. A. (2023). <i>CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment.</i> Sensors, 23(13), 5941.</p><a style="color:var(--cyan);font-size:11px" href="https://doi.org/10.3390/s23135941" target="_blank" rel="noreferrer">https://doi.org/10.3390/s23135941 â†—</a><p class="smallnote" style="margin-top:12px">Built by Sumair Ahmed Â· Department of Artificial Intelligence, University of Sindh.</p></div>
   </section>
-  <footer class="footer"><span>SENTINEL · IoT CYBER THREAT INTELLIGENCE & RESEARCH</span><span>Academic prototype · Not a production security control</span></footer>
+  <footer class="footer"><span>SENTINEL Â· IoT CYBER THREAT INTELLIGENCE & RESEARCH</span><span>Academic prototype Â· Not a production security control</span></footer>
 </main>
 </div>
 <div class="toast" id="toast"></div>
@@ -176,10 +176,10 @@ $("randomScenario").onclick=()=>{if(!DEMO)return;selectedIndex=chooseIndex();run
 $("runScenario").onclick=()=>{if(!DEMO||!META)return;selectedIndex=chooseIndex();runPrediction(selectedIndex)};
 async function runPrediction(i){
  if(!META){toast("Inference API is offline. Start local_server.py first.");return}
- const box=$("resultBox");box.innerHTML='<div class="empty"><div class="big">◌</div><b>Running XGBoost inference…</b></div>';$("inferenceTime").textContent="Processing";
+ const box=$("resultBox");box.innerHTML='<div class="empty"><div class="big">â—Œ</div><b>Running XGBoost inferenceâ€¦</b></div>';$("inferenceTime").textContent="Processing";
  const start=performance.now();
  try{const out=await predictRows(DEMO.features,[DEMO.rows[i]]);const ms=(performance.now()-start).toFixed(0),pred=out.predictions[0],truth=DEMO.true[i],p=out.probabilities[0];$("inferenceTime").textContent=ms+" ms";
- box.innerHTML=`<div class="resulttop"><span class="smallnote">PREDICTED CLASS</span><span class="severity ${pred==="Benign"?"":"attack"}">${pred==="Benign"?"BENIGN":"THREAT CLASS"}</span></div><div class="resultclass">${pred}</div><div class="confidence">Model confidence · ${(out.confidence[0]*100).toFixed(2)}%</div><div class="smallnote" style="margin-top:8px">Ground truth: <b style="color:#eaf4ff">${truth}</b> · ${pred===truth?'<span style="color:var(--green)">Correct on this sample</span>':'<span style="color:var(--amber)">Misclassified sample</span>'}</div><div style="margin-top:15px;font-size:10px;color:#8ea0b8">CLASS PROBABILITIES</div>${out.classes.map((c,j)=>({c,v:p[j]})).sort((a,b)=>b.v-a.v).map(x=>`<div class="probrow"><span>${x.c}</span><div class="track"><div class="fill" style="width:${x.v*100}%"></div></div><b>${(x.v*100).toFixed(1)}%</b></div>`).join("")}<details style="margin-top:14px"><summary style="cursor:pointer;color:var(--cyan);font-size:11px">Inspect all 42 input features</summary><div class="featuretable"><table><thead><tr><th>Feature</th><th>Value</th></tr></thead><tbody>${DEMO.features.map((f,j)=>`<tr><td>${escapeHtml(f)}</td><td>${Number(DEMO.rows[i][j]).toPrecision(6)}</td></tr>`).join("")}</tbody></table></div></details>`;
+ box.innerHTML=`<div class="resulttop"><span class="smallnote">PREDICTED CLASS</span><span class="severity ${pred==="Benign"?"":"attack"}">${pred==="Benign"?"BENIGN":"THREAT CLASS"}</span></div><div class="resultclass">${pred}</div><div class="confidence">Model confidence Â· ${(out.confidence[0]*100).toFixed(2)}%</div><div class="smallnote" style="margin-top:8px">Ground truth: <b style="color:#eaf4ff">${truth}</b> Â· ${pred===truth?'<span style="color:var(--green)">Correct on this sample</span>':'<span style="color:var(--amber)">Misclassified sample</span>'}</div><div style="margin-top:15px;font-size:10px;color:#8ea0b8">CLASS PROBABILITIES</div>${out.classes.map((c,j)=>({c,v:p[j]})).sort((a,b)=>b.v-a.v).map(x=>`<div class="probrow"><span>${x.c}</span><div class="track"><div class="fill" style="width:${x.v*100}%"></div></div><b>${(x.v*100).toFixed(1)}%</b></div>`).join("")}<details style="margin-top:14px"><summary style="cursor:pointer;color:var(--cyan);font-size:11px">Inspect all 42 input features</summary><div class="featuretable"><table><thead><tr><th>Feature</th><th>Value</th></tr></thead><tbody>${DEMO.features.map((f,j)=>`<tr><td>${escapeHtml(f)}</td><td>${Number(DEMO.rows[i][j]).toPrecision(6)}</td></tr>`).join("")}</tbody></table></div></details>`;
  }catch(e){$("inferenceTime").textContent="Failed";box.innerHTML=`<div class="empty"><div class="big">!</div><b>Inference failed</b><p>${escapeHtml(e.message)}</p></div>`}
 }
 async function predictRows(columns,rows){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({columns,rows})});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.error||"API error "+r.status);return d}
@@ -188,7 +188,7 @@ function drawModelChart(){const cv=$("modelChart"),ctx=cv.getContext("2d"),dpr=w
 function parseCSV(text){const lines=[];let row=[],field="",quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(quoted){if(c==='"'&&text[i+1]==='"'){field+='"';i++}else if(c==='"')quoted=false;else field+=c}else if(c==='"')quoted=true;else if(c===","){row.push(field);field=""}else if(c==="\n"){row.push(field);lines.push(row);row=[];field=""}else if(c!=="\r")field+=c}if(field.length||row.length){row.push(field);lines.push(row)}return lines.filter(r=>r.some(v=>v.trim()!==""))}
 let csvData=null;
 $("csvFile").addEventListener("change",async e=>{const f=e.target.files[0];csvData=null;$("runCsv").disabled=true;$("csvSummary").innerHTML="";if(!f)return;try{const text=await f.text(),parsed=parseCSV(text);if(parsed.length<2)throw Error("CSV needs a header and at least one data row.");const headers=parsed[0].map(x=>x.trim()),idx=META?.features.map(f=>headers.indexOf(f))||[];if(!META)throw Error("API metadata unavailable. Start local server.");const missing=META.features.filter(f=>!headers.includes(f));if(missing.length)throw Error("Missing required columns: "+missing.slice(0,8).join(", "));const rows=parsed.slice(1).map((r,i)=>{const vals=idx.map(j=>Number(r[j]));if(vals.some(v=>!Number.isFinite(v)))throw Error("Row "+(i+2)+" contains an empty or non-numeric feature.");return vals});if(rows.length>3000)throw Error("Maximum 3,000 rows per request.");csvData={columns:META.features,rows};$("runCsv").disabled=false;$("csvStatus").textContent=`Validated ${rows.length} rows and all 42 required features.`}catch(err){$("csvStatus").textContent=err.message}});
-$("runCsv").onclick=async()=>{if(!csvData)return;$("runCsv").disabled=true;$("csvStatus").textContent="Running batch inference…";try{const out=await predictRows(csvData.columns,csvData.rows);$("csvStatus").textContent=`Completed: ${out.n_rows} rows classified.`;$("csvSummary").innerHTML='<div class="classlist" style="margin-top:14px">'+out.classes.map((c,i)=>`<div class="classrow"><span>${c}</span><div class="track"><div class="fill" style="width:${100*out.summary[c]/out.n_rows}%;background:${COLORS[i]}"></div></div><b>${out.summary[c]}</b></div>`).join("")+'</div><button class="btn" id="downloadResults" style="margin-top:12px">Download predictions CSV</button>';$("downloadResults").onclick=()=>{const lines=["prediction,confidence",...out.predictions.map((p,i)=>`${p},${out.confidence[i]}`)];downloadBlob(lines.join("\n"),"iot_predictions.csv","text/csv")}}catch(err){$("csvStatus").textContent="Batch inference failed: "+err.message}finally{$("runCsv").disabled=false}};
+$("runCsv").onclick=async()=>{if(!csvData)return;$("runCsv").disabled=true;$("csvStatus").textContent="Running batch inferenceâ€¦";try{const out=await predictRows(csvData.columns,csvData.rows);$("csvStatus").textContent=`Completed: ${out.n_rows} rows classified.`;$("csvSummary").innerHTML='<div class="classlist" style="margin-top:14px">'+out.classes.map((c,i)=>`<div class="classrow"><span>${c}</span><div class="track"><div class="fill" style="width:${100*out.summary[c]/out.n_rows}%;background:${COLORS[i]}"></div></div><b>${out.summary[c]}</b></div>`).join("")+'</div><button class="btn" id="downloadResults" style="margin-top:12px">Download predictions CSV</button>';$("downloadResults").onclick=()=>{const lines=["prediction,confidence",...out.predictions.map((p,i)=>`${p},${out.confidence[i]}`)];downloadBlob(lines.join("\n"),"iot_predictions.csv","text/csv")}}catch(err){$("csvStatus").textContent="Batch inference failed: "+err.message}finally{$("runCsv").disabled=false}};
 function downloadBlob(data,name,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
 $("downloadSample").onclick=()=>{if(!DEMO)return;const lines=[DEMO.features.join(","),...DEMO.rows.slice(0,25).map(r=>r.join(","))];downloadBlob(lines.join("\n"),"iot_sample_flows.csv","text/csv")};
 $("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");
@@ -196,5 +196,26 @@ document.querySelectorAll(".nav a").forEach(a=>a.addEventListener("click",()=>{$
 window.addEventListener("resize",()=>{if(DEMO)drawDistribution();drawModelChart()});
 init();
 </script>
+<!-- PROJECT LINKS: PROFILE, PORTFOLIO AND DATA SOURCES -->
+<section id="project-links" style="margin:40px 0 20px;padding:26px;border:1px solid #263b52;border-radius:16px;background:#101e30;color:#eaf4ff">
+  <div style="font-size:11px;letter-spacing:2px;color:#51d8e8;margin-bottom:10px">PROJECT & RESEARCH RESOURCES</div>
+  <h2 style="margin:0 0 10px;font-size:22px">About the Researcher</h2>
+  <p style="color:#a8b9ce;line-height:1.7">IoT Cyber Threat Intelligence & Research Platform — an ML-based network intrusion detection research project using the CIC-IoT2023 dataset.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;margin:18px 0">
+    <a href="https://www.linkedin.com/in/sumair-ahmed-dero-70ba852a0" target="_blank" rel="noopener noreferrer" style="padding:11px 16px;border-radius:8px;background:#173b58;color:#eaf4ff;text-decoration:none">LinkedIn Profile ↗</a>
+    <a href="https://sumair-ahmed-dero-ai-journey.vercel.app/" target="_blank" rel="noopener noreferrer" style="padding:11px 16px;border-radius:8px;background:#173b58;color:#eaf4ff;text-decoration:none">Personal Portfolio ↗</a>
+    <a href="https://www.kaggle.com/datasets/himadri07/ciciot2023" target="_blank" rel="noopener noreferrer" style="padding:11px 16px;border-radius:8px;background:#173b58;color:#eaf4ff;text-decoration:none">Kaggle Dataset ↗</a>
+  </div>
+  <div style="border-top:1px solid #263b52;padding-top:15px;color:#a8b9ce;font-size:12px;line-height:1.8">
+    <b style="color:#eaf4ff">Dataset:</b> CIC-IoT2023 — Canadian Institute for Cybersecurity.
+    <br>
+    <a href="https://www.unb.ca/cic/datasets/iotdataset-2023.html" target="_blank" rel="noopener noreferrer" style="color:#51d8e8">Official dataset source ↗</a>
+    &nbsp;·&nbsp;
+    <a href="https://doi.org/10.3390/s23135941" target="_blank" rel="noopener noreferrer" style="color:#51d8e8">Original research paper ↗</a>
+    <br>
+    <span>Research implementation and model evaluation are provided for academic and educational purposes.</span>
+  </div>
+</section>
+<!-- END PROJECT LINKS -->
 </body>
 </html>
