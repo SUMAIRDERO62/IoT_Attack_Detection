@@ -5,6 +5,7 @@ An end-to-end machine learning research project for detecting and classifying Io
 The project covers dataset preparation, exploratory analysis, multi-class model evaluation, explainability research, model export, and an interactive web-based inference platform.
 
 <p align="center">
+   <a href="https://io-t-attack-detection.vercel.app/">Deployment</a> .
   <a href="https://github.com/SUMAIRDERO62/IoT_Attack_Detection">GitHub Repository</a> ·
   <a href="https://www.linkedin.com/in/sumair-ahmed-dero-70ba852a0">LinkedIn</a> ·
   <a href="https://sumair-ahmed-dero-ai-journey.vercel.app/">Portfolio</a>
